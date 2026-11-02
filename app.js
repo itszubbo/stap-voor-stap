@@ -107,7 +107,10 @@ async function cancelAppointmentReminder(item) {
 }
 async function scheduleAppointmentReminder(item) {
   if (!item.reminderMinutes || !item.time) return 'none';
-  if (!window.StapNotifications?.isNative) return 'website';
+  if (!window.StapNotifications?.isNative) {
+    item.reminderStatus = 'website';
+    return 'website';
+  }
   const at = new Date(`${item.date}T${item.time}:00`);
   at.setMinutes(at.getMinutes() - Number(item.reminderMinutes));
   if (Number.isNaN(at.getTime()) || at <= new Date()) {
