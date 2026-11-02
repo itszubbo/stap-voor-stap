@@ -299,3 +299,9 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
   .weekday-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .recurring-submit { width: 100%; }
 }
+
+
+/* Herinneringen bij vaste activiteiten */
+.recurring-reminder { color: var(--green-dark); font-size: .76rem; font-weight: 750; }
+.recurring-reminder-note { grid-column: 1 / -1; margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--green-soft); color: var(--green-dark); font-size: .82rem; }
+@media (max-width: 650px) { .recurring-reminder-note { grid-column: auto; } }

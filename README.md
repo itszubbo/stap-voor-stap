@@ -10,6 +10,7 @@ Een eerste Nederlandstalige webapp als hulpmiddel voor dagstructuur, taken opdel
 - **Week & agenda:** afspraken per dag plannen, pictogrammen kiezen, items afvinken en naar een andere week bladeren.
 - **Visueel dagrooster:** afspraken verschijnen automatisch in grote blokken voor ochtend, middag en avond; je kunt ook eigen tijdblokken toevoegen, afvinken en laten voorlezen.
 - **Vaste activiteiten:** activiteiten kunnen iedere week op één of meer gekozen dagen terugkomen; iedere dag kun je de uitvoering apart afvinken.
+- **Herinneringen voor vaste activiteiten:** kies 5, 10, 15 of 30 minuten vooraf. Android zet meldingen voor de komende week klaar en werkt dit venster bij wanneer de app wordt geopend. Toestemming voor meldingen is nodig.
 - **Mijn stappen:** voorbeeldtaken met kleine stappen; eigen taken en stappen toevoegen, afvinken en verwijderen.
 - **Rust & hulp:** eenvoudige pauze-ideeën, een voorbeeldzin om hulp te vragen en een optionele gevoelskeuze.
 - **Instellingen:** tekst groter/kleiner maken en rustige weergave aanzetten.
@@ -89,3 +90,13 @@ Open het Android-project in Android Studio om het op een toestel te testen of ee
 - Als je een afspraak afvinkt of verwijdert, wordt de geplande melding geannuleerd.
 
 De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-workflow bouwt dezelfde bestanden in de APK.
+
+
+### Herinneringen voor vaste activiteiten
+
+- Een vaste activiteit kan een melding krijgen op de gekozen weekdagen.
+- Je kunt kiezen voor 5, 10, 15 of 30 minuten vooraf. Hiervoor is een begintijd verplicht.
+- De Android-app plant meldingen lokaal op het toestel; er is geen meldingenserver nodig.
+- De komende week wordt klaargezet. Wanneer je de app opent, wordt de planning weer een week vooruit bijgewerkt.
+- Meldingen zijn zonder trillen en zonder exacte-alarmtoestemming. Android kan een melding soms iets later tonen.
+- Als je een vaste activiteit verwijdert of een uitvoering afvinkt, wordt de bijbehorende melding geannuleerd.

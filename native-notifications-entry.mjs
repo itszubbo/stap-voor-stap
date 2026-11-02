@@ -9,7 +9,7 @@ async function ensureChannel() {
   await LocalNotifications.createChannel({
     id: channelId,
     name: 'Agenda herinneringen',
-    description: 'Rustige herinneringen voor afspraken',
+    description: 'Rustige herinneringen voor afspraken en vaste activiteiten',
     importance: 2,
     visibility: 0,
     vibration: false
@@ -27,6 +27,11 @@ async function ensurePermission() {
 
 window.StapNotifications = {
   isNative: Capacitor.isNativePlatform(),
+  async hasPermission() {
+    if (!Capacitor.isNativePlatform()) return false;
+    const permission = await LocalNotifications.checkPermissions();
+    return permission.display === 'granted';
+  },
   async schedule(options) {
     if (!Capacitor.isNativePlatform()) return { status: 'website' };
     if (!(await ensurePermission())) return { status: 'denied' };

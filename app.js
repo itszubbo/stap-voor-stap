@@ -179,6 +179,119 @@ function renderTodayAgenda() {
     </li>`;
   }).join('');
 }
+function recurringReminderText(activity) {
+  if (!activity.reminderMinutes) return '';
+  if (activity.reminderStatus === 'scheduled') return '🔔 Melding ' + activity.reminderMinutes + ' min. vooraf';
+  if (activity.reminderStatus === 'website') return '🔔 Herinneringen werken in de Android-app';
+  if (activity.reminderStatus === 'denied') return 'Meldingen staan uit op je telefoon';
+  if (activity.reminderStatus === 'past') return 'De volgende herinnering wordt klaargezet bij het openen van de app';
+  if (activity.reminderStatus === 'error') return 'Herinnering kon niet worden ingesteld';
+  return 'Herinnering: ' + activity.reminderMinutes + ' min. vooraf';
+}
+function recurringNotificationId(activityId, dateISO) {
+  return notificationIdFor('vaste-activiteit:' + activityId + ':' + dateISO);
+}
+async function cancelRecurringReminderId(activity, dateISO) {
+  const id = recurringNotificationId(activity.id, dateISO);
+  if (window.StapNotifications && window.StapNotifications.isNative) {
+    try { await window.StapNotifications.cancel(id); }
+    catch (error) { console.warn('Een vaste herinnering kon niet worden verwijderd.', error); }
+  }
+  activity.notificationIds = (activity.notificationIds || []).filter(item => item !== id);
+}
+async function cancelRecurringReminders(activity) {
+  if (window.StapNotifications && window.StapNotifications.isNative) {
+    for (const id of activity.notificationIds || []) {
+      try { await window.StapNotifications.cancel(id); }
+      catch (error) { console.warn('Een vaste herinnering kon niet worden verwijderd.', error); }
+    }
+  }
+  activity.notificationIds = [];
+}
+async function scheduleRecurringOccurrence(activity, dateISO) {
+  if (!activity.reminderMinutes || !activity.time) return 'none';
+  if (!window.StapNotifications || !window.StapNotifications.isNative) return 'website';
+  const at = new Date(dateISO + 'T' + activity.time + ':00');
+  at.setMinutes(at.getMinutes() - Number(activity.reminderMinutes));
+  if (Number.isNaN(at.getTime()) || at <= new Date()) return 'past';
+  const id = recurringNotificationId(activity.id, dateISO);
+  try {
+    const result = await window.StapNotifications.schedule({
+      id,
+      title: 'Je vaste activiteit komt eraan',
+      body: 'Over ' + activity.reminderMinutes + ' minuten: ' + activity.title,
+      at: at.toISOString()
+    });
+    if (result.status === 'scheduled') {
+      activity.notificationIds = [...new Set([...(activity.notificationIds || []), id])];
+    }
+    activity.reminderStatus = result.status || 'unavailable';
+    return result.status || 'unavailable';
+  } catch (error) {
+    console.warn('De vaste herinnering kon niet worden ingesteld.', error);
+    activity.reminderStatus = 'error';
+    return 'error';
+  }
+}
+async function scheduleRecurringReminders(activity, requestPermission = true) {
+  if (!activity.reminderMinutes) {
+    activity.reminderStatus = '';
+    await cancelRecurringReminders(activity);
+    return 'none';
+  }
+  if (!activity.time) {
+    activity.reminderStatus = 'error';
+    return 'no-time';
+  }
+  if (!window.StapNotifications || !window.StapNotifications.isNative) {
+    activity.reminderStatus = 'website';
+    return 'website';
+  }
+  if (!requestPermission && typeof window.StapNotifications.hasPermission === 'function') {
+    try {
+      if (!(await window.StapNotifications.hasPermission())) {
+        activity.reminderStatus = 'denied';
+        return 'denied';
+      }
+    } catch (error) { console.warn('De meldingsinstelling kon niet worden gecontroleerd.', error); }
+  }
+  await cancelRecurringReminders(activity);
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  let scheduled = 0;
+  let lastStatus = 'past';
+  for (let offset = 0; offset <= 7; offset += 1) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + offset);
+    const dateISO = toLocalISO(date);
+    const weekday = date.getDay() || 7;
+    if (!Array.isArray(activity.weekdays) || !activity.weekdays.includes(weekday)) continue;
+    if (activity.startsOn && dateISO < activity.startsOn) continue;
+    const status = await scheduleRecurringOccurrence(activity, dateISO);
+    lastStatus = status;
+    if (status === 'scheduled') scheduled += 1;
+    if (status === 'denied' || status === 'error') break;
+  }
+  if (scheduled > 0) { activity.reminderStatus = 'scheduled'; return 'scheduled'; }
+  if (lastStatus === 'denied' || lastStatus === 'error') { activity.reminderStatus = lastStatus; return lastStatus; }
+  activity.reminderStatus = 'past';
+  return 'past';
+}
+async function refreshRecurringReminders() {
+  if (!window.StapNotifications || !window.StapNotifications.isNative) return;
+  if (typeof window.StapNotifications.hasPermission !== 'function') return;
+  try {
+    if (!(await window.StapNotifications.hasPermission())) return;
+    for (const activity of state.recurringActivities) {
+      if (activity.reminderMinutes && activity.time && activity.active !== false) {
+        await scheduleRecurringReminders(activity, false);
+      }
+    }
+    saveState();
+    renderAgenda();
+    renderToday();
+  } catch (error) { console.warn('De vaste herinneringen konden niet worden bijgewerkt.', error); }
+}
 function recurringOccurrenceKey(activityId, dateISO) {
   return `${activityId}|${dateISO}`;
 }
@@ -220,12 +333,18 @@ function getDayPlanEntries(dateISO) {
     return timeA.localeCompare(timeB) || a.title.localeCompare(b.title, 'nl');
   });
 }
-function setRecurringOccurrenceDone(activityId, dateISO, done) {
+async function setRecurringOccurrenceDone(activityId, dateISO, done) {
   const key = recurringOccurrenceKey(activityId, dateISO);
   const alreadyDone = state.recurringCompletions.includes(key);
+  const activity = state.recurringActivities.find(item => item.id === activityId);
   if (done && !alreadyDone) state.recurringCompletions.push(key);
-  if (!done && alreadyDone) {
-    state.recurringCompletions = state.recurringCompletions.filter(item => item !== key);
+  if (!done && alreadyDone) state.recurringCompletions = state.recurringCompletions.filter(item => item !== key);
+  if (activity && activity.reminderMinutes) {
+    if (done) await cancelRecurringReminderId(activity, dateISO);
+    else {
+      const status = await scheduleRecurringOccurrence(activity, dateISO);
+      if (status !== 'scheduled' && status !== 'past') activity.reminderStatus = status;
+    }
   }
 }
 function recurringWeekdayNames(weekdays) {
@@ -254,6 +373,7 @@ function renderRecurringActivities() {
         <strong>${escapeHtml(activity.title)}</strong>
         <span>${escapeHtml(recurringWeekdayNames(activity.weekdays))}</span>
         <small>${time} · ${info.label}</small>
+        ${activity.reminderMinutes ? `<span class="recurring-reminder">${escapeHtml(recurringReminderText(activity))}</span>` : ''}
       </div>
       <button class="agenda-delete" type="button" data-recurring-delete="${escapeHtml(activity.id)}" aria-label="Verwijder vaste activiteit: ${escapeHtml(activity.title)}">×</button>
     </li>`;
@@ -304,7 +424,7 @@ function renderDayPlan() {
           <span class="day-plan-time">${timeLabel}</span>
           <strong>${escapeHtml(item.title)}</strong>
           <span class="day-plan-kind">${info.label}${isBlock ? ' · Mijn tijdblok' : isRecurring ? ' · Herhaalt elke week' : ' · Agenda'}</span>
-          ${item.reminderMinutes && !isBlock && !isRecurring ? `<span class="reminder-tag">${reminderStatusText(item)}</span>` : ''}
+          ${item.reminderMinutes && !isBlock ? `<span class="reminder-tag">${isRecurring ? recurringReminderText(item) : reminderStatusText(item)}</span>` : ''}
         </div>
         <label class="day-plan-done">
           <input type="checkbox" ${doneAttribute} ${item.done ? 'checked' : ''}>
@@ -518,7 +638,7 @@ document.getElementById('weekDays').addEventListener('change', async event => {
   const recurringId = event.target.dataset.recurringDone;
   const recurringDate = event.target.dataset.recurringDate;
   if (recurringId && recurringDate) {
-    setRecurringOccurrenceDone(recurringId, recurringDate, event.target.checked);
+    await setRecurringOccurrenceDone(recurringId, recurringDate, event.target.checked);
     saveState();
     renderAgenda();
     renderToday();
@@ -554,11 +674,12 @@ document.getElementById('weekDays').addEventListener('click', async event => {
 });
 
 // Vaste activiteiten die iedere week terugkomen
-document.getElementById('recurringForm').addEventListener('submit', event => {
+document.getElementById('recurringForm').addEventListener('submit', async event => {
   event.preventDefault();
   const title = document.getElementById('recurringActivityName').value.trim();
   const time = document.getElementById('recurringTime').value;
   const endTime = document.getElementById('recurringEndTime').value;
+  const reminderMinutes = Number(document.getElementById('recurringReminder').value || 0);
   const type = document.getElementById('recurringType').value;
   const weekdays = [...document.querySelectorAll('input[name="recurringDay"]:checked')]
     .map(input => Number(input.value))
@@ -579,29 +700,51 @@ document.getElementById('recurringForm').addEventListener('submit', event => {
     document.getElementById('recurringEndTime').focus();
     return;
   }
+  if (reminderMinutes && !time) {
+    showToast('Vul een begintijd in voor je herinnering.');
+    document.getElementById('recurringTime').focus();
+    return;
+  }
 
-  state.recurringActivities.push({
+  const activity = {
     id: makeId('repeat'),
     title,
     time,
     endTime,
+    reminderMinutes,
+    notificationIds: [],
     type,
     weekdays,
     startsOn: toLocalISO(new Date()),
     active: true
-  });
+  };
+  state.recurringActivities.push(activity);
   saveState();
   renderAgenda();
   renderToday();
   document.getElementById('recurringActivityName').value = '';
   document.getElementById('recurringTime').value = '';
   document.getElementById('recurringEndTime').value = '';
+  document.getElementById('recurringReminder').value = '0';
   document.querySelectorAll('input[name="recurringDay"]').forEach(input => { input.checked = false; });
-  showToast('Je vaste activiteit is opgeslagen.');
+
+  if (reminderMinutes) {
+    const status = await scheduleRecurringReminders(activity, true);
+    saveState();
+    renderAgenda();
+    if (status === 'scheduled') showToast('Vaste activiteit opgeslagen. Je krijgt meldingen op de gekozen dagen.');
+    else if (status === 'website') showToast('Vaste activiteit opgeslagen. Herinneringen werken in de Android-app.');
+    else if (status === 'denied') showToast('Vaste activiteit opgeslagen. Meldingen staan uit op je telefoon.');
+    else showToast('Vaste activiteit opgeslagen. De herinnering kon niet worden ingesteld.');
+  } else {
+    showToast('Je vaste activiteit is opgeslagen.');
+  }
 });
-document.getElementById('recurringActivityList').addEventListener('click', event => {
+document.getElementById('recurringActivityList').addEventListener('click', async event => {
   const id = event.target.closest('[data-recurring-delete]')?.dataset.recurringDelete;
   if (!id) return;
+  const activity = state.recurringActivities.find(item => item.id === id);
+  if (activity) await cancelRecurringReminders(activity);
   const prefix = `${id}|`;
   state.recurringActivities = state.recurringActivities.filter(item => item.id !== id);
   state.recurringCompletions = state.recurringCompletions.filter(key => !key.startsWith(prefix));
@@ -665,7 +808,7 @@ document.getElementById('dayPlanGroups').addEventListener('change', async event 
   const recurringId = event.target.dataset.planRecurringDone;
   const recurringDate = event.target.dataset.planRecurringDate;
   if (recurringId && recurringDate) {
-    setRecurringOccurrenceDone(recurringId, recurringDate, event.target.checked);
+    await setRecurringOccurrenceDone(recurringId, recurringDate, event.target.checked);
   } else if (agendaId) {
     const item = state.agenda.find(entry => entry.id === agendaId);
     if (!item) return;
@@ -940,6 +1083,7 @@ document.getElementById('resetData').addEventListener('click', () => {
 });
 
 renderAll();
+void refreshRecurringReminders();
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(error => console.warn('Offline opslaan is niet beschikbaar.', error)));
 }

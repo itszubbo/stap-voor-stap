@@ -212,6 +212,16 @@
                 <label for="recurringEndTime">Eindtijd (mag leeg blijven)</label>
                 <input id="recurringEndTime" type="time">
               </div>
+              <div class="agenda-field">
+                <label for="recurringReminder">Herinnering</label>
+                <select id="recurringReminder">
+                  <option value="0">Geen herinnering</option>
+                  <option value="5">5 minuten van tevoren</option>
+                  <option value="10">10 minuten van tevoren</option>
+                  <option value="15">15 minuten van tevoren</option>
+                  <option value="30">30 minuten van tevoren</option>
+                </select>
+              </div>
               <div class="agenda-field recurring-type-field">
                 <label for="recurringType">Pictogram</label>
                 <select id="recurringType">
@@ -235,6 +245,7 @@
                   <label><input type="checkbox" name="recurringDay" value="7"> Zondag</label>
                 </div>
               </fieldset>
+              <p class="recurring-reminder-note">Op Android worden meldingen voor de komende week klaargezet. Open de app regelmatig om ze bij te werken.</p>
               <button class="button button-primary recurring-submit" type="submit">Vaste activiteit opslaan</button>
             </form>
           </details>
