@@ -108,7 +108,10 @@ async function scheduleAppointmentReminder(item) {
   if (!window.StapNotifications?.isNative) return 'website';
   const at = new Date(`${item.date}T${item.time}:00`);
   at.setMinutes(at.getMinutes() - Number(item.reminderMinutes));
-  if (Number.isNaN(at.getTime()) || at <= new Date()) return 'past';
+  if (Number.isNaN(at.getTime()) || at <= new Date()) {
+    item.reminderStatus = 'past';
+    return 'past';
+  }
   try {
     const notificationId = notificationIdFor(item.id);
     const result = await window.StapNotifications.schedule({
@@ -827,10 +830,8 @@ document.getElementById('agendaForm').addEventListener('submit', async event => 
   item.title = title;
   item.type = type;
   item.reminderMinutes = reminderMinutes;
-  if (!reminderMinutes || item.done) {
-    delete item.reminderStatus;
-    delete item.notificationId;
-  }
+  delete item.reminderStatus;
+  delete item.notificationId;
 
   const selectedDate = new Date(date + 'T12:00:00');
   const thisMonday = getWeekStart(0);
