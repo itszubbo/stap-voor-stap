@@ -269,3 +269,33 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
   .day-block-title, .day-block-submit { grid-column: auto; }
   .day-block-submit { width: 100%; }
 }
+
+
+/* Herhaalactiviteiten per week */
+.recurring-panel { margin-top: 20px; }
+.recurring-panel h2 { margin-bottom: 5px; }
+.recurring-list { display: grid; gap: 9px; margin: 16px 0 0; padding: 0; list-style: none; }
+.recurring-item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 11px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+.recurring-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 11px; background: var(--green-soft); font-size: 1.35rem; }
+.recurring-copy { display: grid; gap: 1px; min-width: 0; }
+.recurring-copy strong { overflow-wrap: anywhere; }
+.recurring-copy span { color: var(--green-dark); font-size: .82rem; font-weight: 750; }
+.recurring-copy small { color: var(--muted); font-size: .76rem; }
+.recurring-empty { padding: 11px 3px; color: var(--muted); font-size: .88rem; }
+.recurring-editor { margin-top: 17px; border: 1px solid var(--line); border-radius: 13px; background: #fbfcfb; }
+.recurring-editor summary { padding: 15px 17px; color: var(--green-dark); font-weight: 800; cursor: pointer; }
+.recurring-form { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; padding: 0 17px 17px; }
+.recurring-title-field, .weekday-field, .recurring-submit { grid-column: 1 / -1; }
+.weekday-field { min-width: 0; margin: 4px 0 0; padding: 13px; border: 1px solid var(--line); border-radius: 12px; }
+.weekday-field legend { padding: 0 6px; color: var(--ink); font-size: .9rem; font-weight: 800; }
+.weekday-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.weekday-options label { display: flex; align-items: center; gap: 7px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: white; font-size: .83rem; font-weight: 700; cursor: pointer; }
+.weekday-options input { width: 19px; height: 19px; accent-color: var(--green); }
+.recurring-submit { justify-self: start; }
+.recurring-tag { display: block; color: var(--green-dark); font-size: .75rem; font-weight: 750; }
+@media (max-width: 650px) {
+  .recurring-form { grid-template-columns: 1fr; }
+  .recurring-title-field, .weekday-field, .recurring-submit { grid-column: auto; }
+  .weekday-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .recurring-submit { width: 100%; }
+}

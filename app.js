@@ -4,6 +4,8 @@ const STORAGE_KEY = 'stap-voor-stap-v1';
 const starterState = {
   agenda: [],
   dayBlocks: [],
+  recurringActivities: [],
+  recurringCompletions: [],
   tasks: [
     { id: 'task-1', title: 'Opstaan en aankleden', done: false },
     { id: 'task-2', title: 'Ontbijten', done: false },
@@ -51,6 +53,8 @@ function loadState() {
       stepTasks: Array.isArray(parsed.stepTasks) ? parsed.stepTasks : clone(starterState.stepTasks),
       agenda: Array.isArray(parsed.agenda) ? parsed.agenda : [],
       dayBlocks: Array.isArray(parsed.dayBlocks) ? parsed.dayBlocks : [],
+      recurringActivities: Array.isArray(parsed.recurringActivities) ? parsed.recurringActivities : [],
+      recurringCompletions: Array.isArray(parsed.recurringCompletions) ? parsed.recurringCompletions : [],
       weekOffset: Number.isInteger(parsed.weekOffset) ? parsed.weekOffset : 0
     };
   } catch (error) {
@@ -159,9 +163,7 @@ function renderToday() {
 function renderTodayAgenda() {
   const container = document.getElementById('todayAgendaPreview');
   const today = toLocalISO(new Date());
-  const items = state.agenda
-    .filter(item => item.date === today)
-    .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+  const items = getAgendaEntriesForDate(today);
   if (!items.length) {
     container.innerHTML = '<li class="today-agenda-empty">Er staan nog geen afspraken in je agenda.</li>';
     return;
@@ -170,24 +172,92 @@ function renderTodayAgenda() {
     const info = agendaTypeInfo(item.type);
     return `<li class="today-agenda-item ${item.done ? 'done' : ''}">
       <span class="today-agenda-icon" aria-hidden="true">${info.icon}</span>
-      <span class="today-agenda-time">${item.time ? escapeHtml(item.time) : 'Hele dag'}</span>
+      <span class="today-agenda-time">${item.startTime ? escapeHtml(item.startTime) : 'Hele dag'}</span>
       <span class="today-agenda-title">${escapeHtml(item.title)}</span>
+      ${item.source === 'recurring' ? '<span class="today-agenda-status">Vast</span>' : ''}
       ${item.done ? '<span class="today-agenda-status">Klaar</span>' : ''}
     </li>`;
   }).join('');
 }
-function getDayPlanEntries(dateISO) {
+function recurringOccurrenceKey(activityId, dateISO) {
+  return `${activityId}|${dateISO}`;
+}
+function getRecurringEntries(dateISO) {
+  const date = new Date(dateISO + 'T12:00:00');
+  const weekday = date.getDay() || 7;
+  return state.recurringActivities
+    .filter(activity => activity.active !== false
+      && Array.isArray(activity.weekdays)
+      && activity.weekdays.includes(weekday)
+      && (!activity.startsOn || dateISO >= activity.startsOn))
+    .map(activity => ({
+      ...activity,
+      source: 'recurring',
+      date: dateISO,
+      startTime: activity.time || '',
+      endTime: activity.endTime || '',
+      done: state.recurringCompletions.includes(recurringOccurrenceKey(activity.id, dateISO))
+    }));
+}
+function getAgendaEntriesForDate(dateISO) {
   const appointments = state.agenda
     .filter(item => item.date === dateISO)
     .map(item => ({ ...item, source: 'agenda', startTime: item.time || '', endTime: '' }));
-  const blocks = state.dayBlocks
-    .filter(item => item.date === dateISO)
-    .map(item => ({ ...item, source: 'block' }));
-  return [...appointments, ...blocks].sort((a, b) => {
+  return [...appointments, ...getRecurringEntries(dateISO)].sort((a, b) => {
     const timeA = a.startTime || '00:00';
     const timeB = b.startTime || '00:00';
     return timeA.localeCompare(timeB) || a.title.localeCompare(b.title, 'nl');
   });
+}
+function getDayPlanEntries(dateISO) {
+  const agendaEntries = getAgendaEntriesForDate(dateISO);
+  const blocks = state.dayBlocks
+    .filter(item => item.date === dateISO)
+    .map(item => ({ ...item, source: 'block' }));
+  return [...agendaEntries, ...blocks].sort((a, b) => {
+    const timeA = a.startTime || '00:00';
+    const timeB = b.startTime || '00:00';
+    return timeA.localeCompare(timeB) || a.title.localeCompare(b.title, 'nl');
+  });
+}
+function setRecurringOccurrenceDone(activityId, dateISO, done) {
+  const key = recurringOccurrenceKey(activityId, dateISO);
+  const alreadyDone = state.recurringCompletions.includes(key);
+  if (done && !alreadyDone) state.recurringCompletions.push(key);
+  if (!done && alreadyDone) {
+    state.recurringCompletions = state.recurringCompletions.filter(item => item !== key);
+  }
+}
+function recurringWeekdayNames(weekdays) {
+  const names = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
+  return (Array.isArray(weekdays) ? weekdays : [])
+    .slice()
+    .sort((a, b) => a - b)
+    .map(day => names[day - 1])
+    .join(', ');
+}
+function renderRecurringActivities() {
+  const container = document.getElementById('recurringActivityList');
+  if (!container) return;
+  if (!state.recurringActivities.length) {
+    container.innerHTML = '<p class="recurring-empty">Je hebt nog geen vaste activiteiten ingesteld.</p>';
+    return;
+  }
+  container.innerHTML = state.recurringActivities.map(activity => {
+    const info = agendaTypeInfo(activity.type);
+    const time = activity.time
+      ? `${escapeHtml(activity.time)}${activity.endTime ? ' – ' + escapeHtml(activity.endTime) : ''}`
+      : 'Geen vaste tijd';
+    return `<li class="recurring-item">
+      <span class="recurring-icon" aria-hidden="true">${info.icon}</span>
+      <div class="recurring-copy">
+        <strong>${escapeHtml(activity.title)}</strong>
+        <span>${escapeHtml(recurringWeekdayNames(activity.weekdays))}</span>
+        <small>${time} · ${info.label}</small>
+      </div>
+      <button class="agenda-delete" type="button" data-recurring-delete="${escapeHtml(activity.id)}" aria-label="Verwijder vaste activiteit: ${escapeHtml(activity.title)}">×</button>
+    </li>`;
+  }).join('');
 }
 function dayPartFor(time) {
   if (!time) return 'all-day';
@@ -222,16 +292,19 @@ function renderDayPlan() {
         ? `${escapeHtml(item.startTime)}${item.endTime ? ' – ' + escapeHtml(item.endTime) : ''}`
         : 'Hele dag';
       const isBlock = item.source === 'block';
+      const isRecurring = item.source === 'recurring';
       const doneAttribute = isBlock
         ? `data-plan-block-done="${escapeHtml(item.id)}"`
-        : `data-plan-agenda-done="${escapeHtml(item.id)}"`;
+        : isRecurring
+          ? `data-plan-recurring-done="${escapeHtml(item.id)}" data-plan-recurring-date="${selectedPlanDate}"`
+          : `data-plan-agenda-done="${escapeHtml(item.id)}"`;
       return `<li class="day-plan-card ${item.done ? 'done' : ''} ${isBlock ? 'user-block' : 'agenda-block'}">
         <span class="day-plan-icon" aria-hidden="true">${info.icon}</span>
         <div class="day-plan-copy">
           <span class="day-plan-time">${timeLabel}</span>
           <strong>${escapeHtml(item.title)}</strong>
-          <span class="day-plan-kind">${info.label}${isBlock ? ' · Mijn tijdblok' : ' · Agenda'}</span>
-          ${item.reminderMinutes && !isBlock ? `<span class="reminder-tag">${reminderStatusText(item)}</span>` : ''}
+          <span class="day-plan-kind">${info.label}${isBlock ? ' · Mijn tijdblok' : isRecurring ? ' · Herhaalt elke week' : ' · Agenda'}</span>
+          ${item.reminderMinutes && !isBlock && !isRecurring ? `<span class="reminder-tag">${reminderStatusText(item)}</span>` : ''}
         </div>
         <label class="day-plan-done">
           <input type="checkbox" ${doneAttribute} ${item.done ? 'checked' : ''}>
@@ -314,24 +387,27 @@ function renderAgenda() {
   const todayISO = toLocalISO(new Date());
   document.getElementById('weekDays').innerHTML = days.map(day => {
     const dayISO = toLocalISO(day);
-    const items = state.agenda
-      .filter(item => item.date === dayISO)
-      .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+    const items = getAgendaEntriesForDate(dayISO);
     const list = items.length ? items.map(item => {
       const info = agendaTypeInfo(item.type);
+      const isRecurring = item.source === 'recurring';
+      const doneInput = isRecurring
+        ? `data-recurring-done="${escapeHtml(item.id)}" data-recurring-date="${dayISO}"`
+        : `data-agenda-done="${escapeHtml(item.id)}"`;
       return `
         <li class="agenda-item ${item.done ? 'done' : ''}">
           <span class="agenda-icon" aria-hidden="true">${info.icon}</span>
           <div class="agenda-item-copy">
-            <span class="agenda-time">${item.time ? escapeHtml(item.time) : 'Hele dag'} · ${info.label}</span>
+            <span class="agenda-time">${item.startTime ? escapeHtml(item.startTime) : 'Hele dag'} · ${info.label}</span>
             <strong>${escapeHtml(item.title)}</strong>
-            ${item.reminderMinutes ? `<span class="reminder-tag">${reminderStatusText(item)}</span>` : ''}
+            ${isRecurring ? '<span class="recurring-tag">↻ Herhaalt elke week</span>' : ''}
+            ${item.reminderMinutes && !isRecurring ? `<span class="reminder-tag">${reminderStatusText(item)}</span>` : ''}
           </div>
           <label class="agenda-done-label">
-            <input type="checkbox" data-agenda-done="${escapeHtml(item.id)}" ${item.done ? 'checked' : ''}>
+            <input type="checkbox" ${doneInput} ${item.done ? 'checked' : ''}>
             <span>Klaar</span>
           </label>
-          <button class="agenda-delete" type="button" data-agenda-delete="${escapeHtml(item.id)}" aria-label="Verwijder afspraak: ${escapeHtml(item.title)}">×</button>
+          ${isRecurring ? '' : `<button class="agenda-delete" type="button" data-agenda-delete="${escapeHtml(item.id)}" aria-label="Verwijder afspraak: ${escapeHtml(item.title)}">×</button>`}
         </li>`;
     }).join('') : '<li class="agenda-empty">Nog niets gepland.</li>';
     return `
@@ -345,6 +421,7 @@ function renderAgenda() {
   }).join('');
   const dateInput = document.getElementById('agendaDate');
   if (!dateInput.value) dateInput.value = todayISO;
+  renderRecurringActivities();
 }
 function renderSettings() {
   document.body.classList.toggle('calm-mode', Boolean(state.calmMode));
@@ -438,6 +515,16 @@ document.getElementById('agendaForm').addEventListener('submit', async event => 
   else showToast('Afspraak opgeslagen. De herinnering kon niet worden ingesteld.');
 });
 document.getElementById('weekDays').addEventListener('change', async event => {
+  const recurringId = event.target.dataset.recurringDone;
+  const recurringDate = event.target.dataset.recurringDate;
+  if (recurringId && recurringDate) {
+    setRecurringOccurrenceDone(recurringId, recurringDate, event.target.checked);
+    saveState();
+    renderAgenda();
+    renderToday();
+    return;
+  }
+
   const id = event.target.dataset.agendaDone;
   if (!id) return;
   const item = state.agenda.find(entry => entry.id === id);
@@ -464,6 +551,64 @@ document.getElementById('weekDays').addEventListener('click', async event => {
   renderAgenda();
   renderToday();
   showToast('De afspraak is verwijderd.');
+});
+
+// Vaste activiteiten die iedere week terugkomen
+document.getElementById('recurringForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const title = document.getElementById('recurringTitle').value.trim();
+  const time = document.getElementById('recurringTime').value;
+  const endTime = document.getElementById('recurringEndTime').value;
+  const type = document.getElementById('recurringType').value;
+  const weekdays = [...document.querySelectorAll('input[name="recurringDay"]:checked')]
+    .map(input => Number(input.value))
+    .filter(day => Number.isInteger(day) && day >= 1 && day <= 7)
+    .sort((a, b) => a - b);
+
+  if (!title) {
+    showToast('Schrijf op wat je elke week wilt doen.');
+    document.getElementById('recurringTitle').focus();
+    return;
+  }
+  if (!weekdays.length) {
+    showToast('Kies minstens één dag.');
+    return;
+  }
+  if (endTime && (!time || endTime <= time)) {
+    showToast('De eindtijd moet na de begintijd zijn.');
+    document.getElementById('recurringEndTime').focus();
+    return;
+  }
+
+  state.recurringActivities.push({
+    id: makeId('repeat'),
+    title,
+    time,
+    endTime,
+    type,
+    weekdays,
+    startsOn: toLocalISO(new Date()),
+    active: true
+  });
+  saveState();
+  renderAgenda();
+  renderToday();
+  document.getElementById('recurringTitle').value = '';
+  document.getElementById('recurringTime').value = '';
+  document.getElementById('recurringEndTime').value = '';
+  document.querySelectorAll('input[name="recurringDay"]').forEach(input => { input.checked = false; });
+  showToast('Je vaste activiteit is opgeslagen.');
+});
+document.getElementById('recurringActivityList').addEventListener('click', event => {
+  const id = event.target.closest('[data-recurring-delete]')?.dataset.recurringDelete;
+  if (!id) return;
+  const prefix = `${id}|`;
+  state.recurringActivities = state.recurringActivities.filter(item => item.id !== id);
+  state.recurringCompletions = state.recurringCompletions.filter(key => !key.startsWith(prefix));
+  saveState();
+  renderAgenda();
+  renderToday();
+  showToast('De vaste activiteit is verwijderd.');
 });
 
 // Visueel dagrooster
@@ -517,7 +662,11 @@ document.getElementById('dayBlockForm').addEventListener('submit', event => {
 document.getElementById('dayPlanGroups').addEventListener('change', async event => {
   const agendaId = event.target.dataset.planAgendaDone;
   const blockId = event.target.dataset.planBlockDone;
-  if (agendaId) {
+  const recurringId = event.target.dataset.planRecurringDone;
+  const recurringDate = event.target.dataset.planRecurringDate;
+  if (recurringId && recurringDate) {
+    setRecurringOccurrenceDone(recurringId, recurringDate, event.target.checked);
+  } else if (agendaId) {
     const item = state.agenda.find(entry => entry.id === agendaId);
     if (!item) return;
     item.done = event.target.checked;
@@ -645,15 +794,13 @@ function makeSpeechText(section) {
       lines.push(`Taak ${index + 1}: ${task.title}. ${task.done ? 'Klaar.' : 'Nog te doen.'}`);
     });
     const today = toLocalISO(new Date());
-    const appointments = state.agenda
-      .filter(item => item.date === today)
-      .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+    const appointments = getAgendaEntriesForDate(today);
     if (!appointments.length) {
       lines.push('Er staan vandaag geen afspraken in je agenda.');
     } else {
       lines.push('Je afspraken voor vandaag.');
       appointments.forEach(item => {
-        lines.push(`${item.time ? 'Om ' + item.time : 'De hele dag'}: ${item.title}. ${item.done ? 'Deze afspraak is klaar.' : 'Deze afspraak moet nog komen.'}`);
+        lines.push(`${item.startTime ? 'Om ' + item.startTime : 'De hele dag'}: ${item.title}. ${item.source === 'recurring' ? 'Dit is een vaste activiteit.' : ''} ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
       });
     }
     const todayBlocks = state.dayBlocks.filter(item => item.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -696,16 +843,14 @@ function makeSpeechText(section) {
     for (let index = 0; index < 7; index += 1) {
       const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + index);
       const dayISO = toLocalISO(day);
-      const items = state.agenda
-        .filter(item => item.date === dayISO)
-        .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+      const items = getAgendaEntriesForDate(dayISO);
       lines.push(`${formatAgendaDate(day)}.`);
       if (!items.length) {
         lines.push('Nog niets gepland.');
       } else {
         items.forEach(item => {
           const info = agendaTypeInfo(item.type);
-          lines.push(`${item.time ? 'Om ' + item.time : 'De hele dag'}: ${item.title}. ${info.label}. ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
+          lines.push(`${item.startTime ? 'Om ' + item.startTime : 'De hele dag'}: ${item.title}. ${info.label}. ${item.source === 'recurring' ? 'Deze activiteit herhaalt elke week.' : ''} ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
         });
       }
     }

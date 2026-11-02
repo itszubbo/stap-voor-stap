@@ -189,6 +189,56 @@
           <div class="week-days" id="weekDays" aria-live="polite"></div>
         </section>
 
+
+        <section class="panel recurring-panel" aria-labelledby="recurringTitle">
+          <p class="eyebrow">IEDERE WEEK</p>
+          <h2 id="recurringTitle">Vaste activiteiten</h2>
+          <p class="muted">Een vaste activiteit komt vanzelf terug op de dagen die jij kiest.</p>
+          <ul id="recurringActivityList" class="recurring-list" aria-label="Mijn vaste activiteiten">
+            <li class="recurring-empty">Je hebt nog geen vaste activiteiten ingesteld.</li>
+          </ul>
+          <details class="recurring-editor">
+            <summary>+ Voeg een vaste activiteit toe</summary>
+            <form id="recurringForm" class="recurring-form">
+              <div class="agenda-field recurring-title-field">
+                <label for="recurringTitle">Wat wil je elke week doen?</label>
+                <input id="recurringTitle" type="text" maxlength="70" placeholder="Bijvoorbeeld: dagbesteding" required>
+              </div>
+              <div class="agenda-field">
+                <label for="recurringTime">Hoe laat? (mag leeg blijven)</label>
+                <input id="recurringTime" type="time">
+              </div>
+              <div class="agenda-field">
+                <label for="recurringEndTime">Eindtijd (mag leeg blijven)</label>
+                <input id="recurringEndTime" type="time">
+              </div>
+              <div class="agenda-field recurring-type-field">
+                <label for="recurringType">Pictogram</label>
+                <select id="recurringType">
+                  <option value="home">🏠 Thuis</option>
+                  <option value="appointment">🩺 Afspraak</option>
+                  <option value="work">💼 Werk of dagbesteding</option>
+                  <option value="care">❤️ Zorg of begeleiding</option>
+                  <option value="fun">🎨 Vrije tijd</option>
+                  <option value="travel">🚌 Reizen</option>
+                </select>
+              </div>
+              <fieldset class="weekday-field">
+                <legend>Op welke dagen komt dit terug?</legend>
+                <div class="weekday-options">
+                  <label><input type="checkbox" name="recurringDay" value="1"> Maandag</label>
+                  <label><input type="checkbox" name="recurringDay" value="2"> Dinsdag</label>
+                  <label><input type="checkbox" name="recurringDay" value="3"> Woensdag</label>
+                  <label><input type="checkbox" name="recurringDay" value="4"> Donderdag</label>
+                  <label><input type="checkbox" name="recurringDay" value="5"> Vrijdag</label>
+                  <label><input type="checkbox" name="recurringDay" value="6"> Zaterdag</label>
+                  <label><input type="checkbox" name="recurringDay" value="7"> Zondag</label>
+                </div>
+              </fieldset>
+              <button class="button button-primary recurring-submit" type="submit">Vaste activiteit opslaan</button>
+            </form>
+          </details>
+        </section>
         <section class="panel add-agenda-panel" aria-labelledby="addAgendaTitle">
           <p class="eyebrow">ZELF PLANNEN</p>
           <h2 id="addAgendaTitle">Voeg een afspraak toe</h2>
