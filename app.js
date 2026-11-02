@@ -62,6 +62,58 @@ function saveState() {
 function makeId(prefix = 'item') {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
+function notificationIdFor(value) {
+  let hash = 2166136261;
+  for (const char of String(value)) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) % 2147483647 || 1;
+}
+async function cancelAppointmentReminder(item) {
+  if (!item?.notificationId || !window.StapNotifications?.isNative) return;
+  try {
+    await window.StapNotifications.cancel(item.notificationId);
+  } catch (error) {
+    console.warn('De herinnering kon niet worden verwijderd.', error);
+  }
+  delete item.notificationId;
+}
+async function scheduleAppointmentReminder(item) {
+  if (!item.reminderMinutes || !item.time) return 'none';
+  if (!window.StapNotifications?.isNative) return 'website';
+  const at = new Date(`${item.date}T${item.time}:00`);
+  at.setMinutes(at.getMinutes() - Number(item.reminderMinutes));
+  if (Number.isNaN(at.getTime()) || at <= new Date()) return 'past';
+  try {
+    const notificationId = notificationIdFor(item.id);
+    const result = await window.StapNotifications.schedule({
+      id: notificationId,
+      title: 'Je afspraak komt eraan',
+      body: `Over ${item.reminderMinutes} minuten: ${item.title}`,
+      at: at.toISOString()
+    });
+    item.reminderStatus = result.status;
+    if (result.status === 'scheduled') {
+      item.notificationId = notificationId;
+      return 'scheduled';
+    }
+    return result.status || 'unavailable';
+  } catch (error) {
+    console.warn('De herinnering kon niet worden ingesteld.', error);
+    item.reminderStatus = 'error';
+    return 'error';
+  }
+}
+function reminderStatusText(item) {
+  if (item.reminderStatus === 'scheduled') return `🔔 Melding ${item.reminderMinutes} min. vooraf`;
+  if (item.reminderStatus === 'denied') return 'Meldingen staan uit op je telefoon';
+  if (item.reminderStatus === 'website') return 'Melding beschikbaar in de Android-app';
+  if (item.reminderStatus === 'past') return 'Herinneringstijd is al voorbij';
+  if (item.reminderStatus === 'cancelled') return 'Herinnering gepauzeerd';
+  if (item.reminderStatus === 'error') return 'Herinnering kon niet worden ingesteld';
+  return `Herinnering: ${item.reminderMinutes} min. vooraf`;
+}
 function showToast(message) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
@@ -98,6 +150,27 @@ function renderToday() {
   document.getElementById('progressPercent').textContent = `${percent}%`;
   document.getElementById('progressFill').style.width = `${percent}%`;
   document.getElementById('progressBar').setAttribute('aria-valuenow', String(percent));
+  renderTodayAgenda();
+}
+function renderTodayAgenda() {
+  const container = document.getElementById('todayAgendaPreview');
+  const today = toLocalISO(new Date());
+  const items = state.agenda
+    .filter(item => item.date === today)
+    .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+  if (!items.length) {
+    container.innerHTML = '<li class="today-agenda-empty">Er staan nog geen afspraken in je agenda.</li>';
+    return;
+  }
+  container.innerHTML = items.map(item => {
+    const info = agendaTypeInfo(item.type);
+    return `<li class="today-agenda-item ${item.done ? 'done' : ''}">
+      <span class="today-agenda-icon" aria-hidden="true">${info.icon}</span>
+      <span class="today-agenda-time">${item.time ? escapeHtml(item.time) : 'Hele dag'}</span>
+      <span class="today-agenda-title">${escapeHtml(item.title)}</span>
+      ${item.done ? '<span class="today-agenda-status">Klaar</span>' : ''}
+    </li>`;
+  }).join('');
 }
 function renderStepChoices() {
   const container = document.getElementById('stepTaskChoices');
@@ -173,6 +246,7 @@ function renderAgenda() {
           <div class="agenda-item-copy">
             <span class="agenda-time">${item.time ? escapeHtml(item.time) : 'Hele dag'} · ${info.label}</span>
             <strong>${escapeHtml(item.title)}</strong>
+            ${item.reminderMinutes ? `<span class="reminder-tag">${reminderStatusText(item)}</span>` : ''}
           </div>
           <label class="agenda-done-label">
             <input type="checkbox" data-agenda-done="${escapeHtml(item.id)}" ${item.done ? 'checked' : ''}>
@@ -230,6 +304,7 @@ for (const button of document.querySelectorAll('.nav-button')) button.addEventLi
 document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => showView(button.dataset.go)));
 
 // Weekplanner en persoonlijke agenda
+document.getElementById('goToAgenda').addEventListener('click', () => showView('agenda'));
 document.getElementById('previousWeek').addEventListener('click', () => {
   state.weekOffset = (state.weekOffset || 0) - 1;
   renderAgenda();
@@ -242,19 +317,24 @@ document.getElementById('currentWeek').addEventListener('click', () => {
   state.weekOffset = 0;
   renderAgenda();
 });
-document.getElementById('agendaForm').addEventListener('submit', event => {
+document.getElementById('agendaForm').addEventListener('submit', async event => {
   event.preventDefault();
   const date = document.getElementById('agendaDate').value;
   const time = document.getElementById('agendaTime').value;
   const title = document.getElementById('agendaTitleInput').value.trim();
   const type = document.getElementById('agendaType').value;
+  const reminderMinutes = Number(document.getElementById('agendaReminder').value || 0);
   if (!date || !title) {
     showToast('Vul een dag en een activiteit in.');
     return;
   }
-  state.agenda.push({ id: makeId('agenda'), date, time, title, type, done: false });
-  state.weekOffset = Math.round((new Date(date + 'T12:00:00') - getWeekStart(0)) / (7 * 24 * 60 * 60 * 1000));
-  // Bepaal de week opnieuw op basis van de gekozen datum.
+  if (reminderMinutes && !time) {
+    showToast('Vul ook een tijd in voor je herinnering.');
+    document.getElementById('agendaTime').focus();
+    return;
+  }
+  const item = { id: makeId('agenda'), date, time, title, type, reminderMinutes, done: false };
+  state.agenda.push(item);
   const selectedDate = new Date(date + 'T12:00:00');
   const thisMonday = getWeekStart(0);
   const selectedMonday = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - ((selectedDate.getDay() + 6) % 7));
@@ -263,24 +343,46 @@ document.getElementById('agendaForm').addEventListener('submit', event => {
   document.getElementById('agendaTime').value = '';
   saveState();
   renderAgenda();
-  showToast('De afspraak staat in je agenda.');
+  renderToday();
+  if (!reminderMinutes) {
+    showToast('De afspraak staat in je agenda.');
+    return;
+  }
+  const reminderStatus = await scheduleAppointmentReminder(item);
+  saveState();
+  renderAgenda();
+  if (reminderStatus === 'scheduled') showToast(`Afspraak opgeslagen. Je krijgt ${reminderMinutes} min. vooraf een melding.`);
+  else if (reminderStatus === 'website') showToast('Afspraak opgeslagen. Meldingen werken in de Android-app.');
+  else if (reminderStatus === 'past') showToast('Afspraak opgeslagen. De gekozen herinneringstijd is al voorbij.');
+  else if (reminderStatus === 'denied') showToast('Afspraak opgeslagen. Meldingen staan uit op je telefoon.');
+  else showToast('Afspraak opgeslagen. De herinnering kon niet worden ingesteld.');
 });
-document.getElementById('weekDays').addEventListener('change', event => {
+document.getElementById('weekDays').addEventListener('change', async event => {
   const id = event.target.dataset.agendaDone;
   if (!id) return;
   const item = state.agenda.find(entry => entry.id === id);
   if (item) {
     item.done = event.target.checked;
+    if (item.done) {
+      await cancelAppointmentReminder(item);
+      item.reminderStatus = 'cancelled';
+    } else if (item.reminderMinutes) {
+      await scheduleAppointmentReminder(item);
+    }
     saveState();
     renderAgenda();
+    renderToday();
   }
 });
-document.getElementById('weekDays').addEventListener('click', event => {
+document.getElementById('weekDays').addEventListener('click', async event => {
   const id = event.target.dataset.agendaDelete;
   if (!id) return;
-  state.agenda = state.agenda.filter(item => item.id !== id);
+  const item = state.agenda.find(entry => entry.id === id);
+  if (item) await cancelAppointmentReminder(item);
+  state.agenda = state.agenda.filter(entry => entry.id !== id);
   saveState();
   renderAgenda();
+  renderToday();
   showToast('De afspraak is verwijderd.');
 });
 

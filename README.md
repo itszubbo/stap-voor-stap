@@ -74,3 +74,15 @@ npx cap open android
 ```
 
 Open het Android-project in Android Studio om het op een toestel te testen of een releaseversie te maken.
+
+
+## Herinneringen op Android
+
+- Bij een afspraak kun je kiezen voor 5, 10, 15 of 30 minuten vooraf.
+- De Android-app gebruikt lokale meldingen op het toestel. Er is geen meldingenserver nodig.
+- De meldingen zijn prikkelarm: zonder trillen en zonder exacte-alarmtoestemming. Android kan een melding daardoor iets later tonen.
+- De app vraagt toestemming voor meldingen wanneer je de eerste herinnering instelt.
+- Op de website kun je afspraken plannen; echte toestelmeldingen zijn beschikbaar in de Android-app.
+- Als je een afspraak afvinkt of verwijdert, wordt de geplande melding geannuleerd.
+
+De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-workflow bouwt dezelfde bestanden in de APK.

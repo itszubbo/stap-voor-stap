@@ -46,6 +46,7 @@ jobs:
         run: |
           node --check app.js
           node --check scripts/copy-web-assets.mjs
+          node --check native-notifications-entry.mjs
           npm run build:web
 
       - name: Maak Android-project

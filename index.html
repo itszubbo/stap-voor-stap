@@ -69,6 +69,13 @@
           </form>
         </section>
 
+        <section class="panel today-agenda-panel" aria-labelledby="todayAgendaTitle">
+          <div class="panel-heading">
+            <div><p class="eyebrow">MIJN DAGPLANNING</p><h2 id="todayAgendaTitle">Wat staat er vandaag op de planning?</h2></div>
+            <button class="text-button" id="goToAgenda" type="button">Mijn week →</button>
+          </div>
+          <ul class="today-agenda-list" id="todayAgendaPreview" aria-label="Afspraken van vandaag"></ul>
+        </section>
         <div class="two-cards">
           <article class="tip-card soft-blue">
             <div class="card-icon" aria-hidden="true">🧩</div>
@@ -133,7 +140,7 @@
         <section class="panel add-agenda-panel" aria-labelledby="addAgendaTitle">
           <p class="eyebrow">ZELF PLANNEN</p>
           <h2 id="addAgendaTitle">Voeg een afspraak toe</h2>
-          <p class="muted">Kies een dag en schrijf op wat je gaat doen.</p>
+          <p class="muted">Kies een dag en schrijf op wat je gaat doen.</p><p class="small-note">Meldingen werken in de Android-app. Je telefoon kan eerst om toestemming vragen. Ze kunnen soms iets later komen.</p>
           <form id="agendaForm" class="agenda-form">
             <div class="agenda-field">
               <label for="agendaDate">Welke dag?</label>
@@ -156,6 +163,16 @@
                 <option value="care">❤️ Zorg of begeleiding</option>
                 <option value="fun">🎨 Vrije tijd</option>
                 <option value="travel">🚌 Reizen</option>
+              </select>
+            </div>
+            <div class="agenda-field">
+              <label for="agendaReminder">Wanneer wil je een herinnering?</label>
+              <select id="agendaReminder" name="reminder">
+                <option value="0">Geen herinnering</option>
+                <option value="5">5 minuten van tevoren</option>
+                <option value="10">10 minuten van tevoren</option>
+                <option value="15" selected>15 minuten van tevoren</option>
+                <option value="30">30 minuten van tevoren</option>
               </select>
             </div>
             <button class="button button-primary agenda-submit" type="submit">+ Zet in mijn agenda</button>
@@ -223,6 +240,7 @@
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="native-notifications.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>
