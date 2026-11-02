@@ -760,6 +760,22 @@ for (const button of document.querySelectorAll('.nav-button')) button.addEventLi
 document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => showView(button.dataset.go)));
 
 // Weekplanner en persoonlijke agenda
+const printWeekButton = document.getElementById('printWeek');
+if (window.StapNotifications?.isNative) {
+  printWeekButton.hidden = true;
+  document.getElementById('printWeekNote').hidden = true;
+}
+printWeekButton.addEventListener('click', () => {
+  const cleanupPrintView = () => document.body.classList.remove('print-week');
+  document.body.classList.add('print-week');
+  window.addEventListener('afterprint', cleanupPrintView, { once: true });
+  try {
+    window.print();
+  } catch (error) {
+    cleanupPrintView();
+    showToast('Afdrukken lukt niet in deze browser.');
+  }
+});
 document.getElementById('goToAgenda').addEventListener('click', () => showView('agenda'));
 document.getElementById('previousWeek').addEventListener('click', () => {
   state.weekOffset = (state.weekOffset || 0) - 1;

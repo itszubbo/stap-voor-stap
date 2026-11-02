@@ -143,3 +143,12 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - De melding wordt bijgewerkt wanneer een tijdblok wordt aangepast.
 - Als je een tijdblok afvinkt of verwijdert, wordt de bijbehorende melding geannuleerd.
 - Op de website wordt de keuze getoond; echte toestelmeldingen werken in de Android-app.
+
+
+### Weekoverzicht afdrukken
+
+- In **Week & agenda** staat een knop **Print weekoverzicht**.
+- De afdruk toont alle zeven dagen van de gekozen week, met afspraken en vaste activiteiten.
+- Menu's, invoervelden en bewerkknoppen worden niet afgedrukt.
+- In de browser kun je het overzicht afdrukken of bij de printerkeuze opslaan als PDF.
+- Deze functie is bedoeld voor de website in een browser; de knop wordt in de Android-app verborgen.
