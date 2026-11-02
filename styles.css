@@ -349,3 +349,14 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
   .recurring-form-actions { display: grid; grid-template-columns: 1fr; }
   .recurring-form-actions .button { width: 100%; }
 }
+
+/* Tijdblokken aanpassen */
+.day-plan-actions { display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+.day-plan-actions .day-plan-done { margin-right: 3px; }
+.day-block-form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.day-block-form-actions .day-block-submit { grid-column: auto; }
+@media (max-width: 650px) {
+  .day-plan-actions { grid-column: 2; justify-content: flex-start; flex-wrap: wrap; }
+  .day-block-form-actions { display: grid; grid-template-columns: 1fr; }
+  .day-block-form-actions .button { width: 100%; }
+}

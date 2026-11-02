@@ -126,3 +126,11 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - De bestaande activiteit blijft behouden; de herinneringen worden opnieuw ingesteld.
 - Afvinkjes blijven staan voor dagen waarop de activiteit nog steeds terugkomt. Afvinkjes voor verwijderde weekdagen worden opgeruimd.
 - Met Annuleren sluit je het aanpassen zonder wijzigingen op te slaan.
+
+
+### Tijdblokken aanpassen
+
+- In het dagrooster kun je een zelf toegevoegd tijdblok met het potloodje aanpassen.
+- Je kunt de dag, begin- en eindtijd, naam en pictogram wijzigen.
+- De bestaande afvinkstatus blijft behouden.
+- Met Annuleren sluit je de bewerking zonder wijzigingen op te slaan.

@@ -122,8 +122,12 @@
           </div>
           <div id="dayPlanGroups" class="day-plan-groups" aria-live="polite"></div>
           <details class="day-block-editor">
-            <summary>+ Voeg zelf een tijdblok toe</summary>
+            <summary id="dayBlockEditorSummary">+ Voeg zelf een tijdblok toe</summary>
             <form id="dayBlockForm" class="day-block-form">
+              <div class="agenda-field">
+                <label for="dayBlockDate">Welke dag?</label>
+                <input id="dayBlockDate" type="date" required>
+              </div>
               <div class="agenda-field">
                 <label for="dayBlockStart">Begintijd</label>
                 <input id="dayBlockStart" type="time" required>
@@ -147,7 +151,10 @@
                 <label for="dayBlockTitle">Wat ga je doen?</label>
                 <input id="dayBlockTitle" type="text" maxlength="70" placeholder="Bijvoorbeeld: ontbijten" required>
               </div>
-              <button class="button button-primary day-block-submit" type="submit">Tijdblok toevoegen</button>
+              <div class="day-block-form-actions">
+                <button class="button button-primary day-block-submit" id="dayBlockSubmit" type="submit">Tijdblok toevoegen</button>
+                <button class="button button-secondary" id="dayBlockCancel" type="button" hidden>Annuleren</button>
+              </div>
             </form>
           </details>
         </section>

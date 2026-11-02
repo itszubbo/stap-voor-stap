@@ -47,6 +47,7 @@ let toastTimer;
 let selectedPlanDate = toLocalISO(new Date());
 let editingAgendaId = null;
 let editingRecurringId = null;
+let editingDayBlockId = null;
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function loadState() {
@@ -434,6 +435,7 @@ function renderDayPlan() {
     ? 'Vandaag'
     : formatAgendaDate(day);
   document.getElementById('planTodayButton').hidden = isToday;
+  if (!editingDayBlockId) document.getElementById('dayBlockDate').value = selectedPlanDate;
 
   const entries = getDayPlanEntries(selectedPlanDate);
   const groups = [
@@ -465,11 +467,13 @@ function renderDayPlan() {
           <span class="day-plan-kind">${info.label}${isBlock ? ' · Mijn tijdblok' : isRecurring ? ' · Herhaalt elke week' : ' · Agenda'}</span>
           ${item.reminderMinutes && !isBlock ? `<span class="reminder-tag">${isRecurring ? recurringReminderText(item) : reminderStatusText(item)}</span>` : ''}
         </div>
-        <label class="day-plan-done">
-          <input type="checkbox" ${doneAttribute} ${item.done ? 'checked' : ''}>
-          <span>Klaar</span>
-        </label>
-        ${isBlock ? `<button class="agenda-delete" type="button" data-plan-block-delete="${escapeHtml(item.id)}" aria-label="Verwijder tijdblok: ${escapeHtml(item.title)}">×</button>` : ''}
+        <div class="day-plan-actions">
+          <label class="day-plan-done">
+            <input type="checkbox" ${doneAttribute} ${item.done ? 'checked' : ''}>
+            <span>Klaar</span>
+          </label>
+          ${isBlock ? `<button class="agenda-edit" type="button" data-plan-block-edit="${escapeHtml(item.id)}" aria-label="Pas tijdblok aan: ${escapeHtml(item.title)}" title="Aanpassen">✎</button><button class="agenda-delete" type="button" data-plan-block-delete="${escapeHtml(item.id)}" aria-label="Verwijder tijdblok: ${escapeHtml(item.title)}" title="Verwijderen">×</button>` : ''}
+        </div>
       </li>`;
     }).join('');
     return `<section class="day-plan-part" aria-labelledby="day-part-${group.id}">
@@ -1091,14 +1095,54 @@ document.getElementById('planTodayButton').addEventListener('click', () => {
   selectedPlanDate = toLocalISO(new Date());
   renderDayPlan();
 });
+
+function setDayBlockFormMode(isEditing) {
+  const details = document.querySelector('.day-block-editor');
+  document.getElementById('dayBlockEditorSummary').textContent = isEditing
+    ? 'Tijdblok aanpassen'
+    : '+ Voeg zelf een tijdblok toe';
+  document.getElementById('dayBlockSubmit').textContent = isEditing
+    ? 'Wijzigingen opslaan'
+    : 'Tijdblok toevoegen';
+  document.getElementById('dayBlockCancel').hidden = !isEditing;
+  if (details) details.open = Boolean(isEditing);
+}
+function resetDayBlockForm() {
+  editingDayBlockId = null;
+  document.getElementById('dayBlockForm').reset();
+  document.getElementById('dayBlockDate').value = selectedPlanDate;
+  setDayBlockFormMode(false);
+}
+function beginDayBlockEdit(id) {
+  const item = state.dayBlocks.find(entry => entry.id === id);
+  if (!item) return;
+  editingDayBlockId = id;
+  selectedPlanDate = item.date;
+  document.getElementById('dayBlockDate').value = item.date;
+  document.getElementById('dayBlockStart').value = item.startTime || '';
+  document.getElementById('dayBlockEnd').value = item.endTime || '';
+  document.getElementById('dayBlockTitle').value = item.title || '';
+  document.getElementById('dayBlockType').value = item.type || 'appointment';
+  setDayBlockFormMode(true);
+  renderDayPlan();
+  document.getElementById('dayBlockDate').value = item.date;
+  document.getElementById('dayBlockForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('dayBlockTitle').focus({ preventScroll: true });
+}
+
+document.getElementById('dayBlockCancel').addEventListener('click', () => {
+  resetDayBlockForm();
+  showToast('Aanpassen geannuleerd.');
+});
 document.getElementById('dayBlockForm').addEventListener('submit', event => {
   event.preventDefault();
+  const date = document.getElementById('dayBlockDate').value;
   const startTime = document.getElementById('dayBlockStart').value;
   const endTime = document.getElementById('dayBlockEnd').value;
   const title = document.getElementById('dayBlockTitle').value.trim();
   const type = document.getElementById('dayBlockType').value;
-  if (!startTime || !title) {
-    showToast('Vul een begintijd en activiteit in.');
+  if (!date || !startTime || !title) {
+    showToast('Vul een dag, begintijd en activiteit in.');
     return;
   }
   if (endTime && endTime <= startTime) {
@@ -1106,21 +1150,30 @@ document.getElementById('dayBlockForm').addEventListener('submit', event => {
     document.getElementById('dayBlockEnd').focus();
     return;
   }
-  state.dayBlocks.push({
-    id: makeId('block'),
-    date: selectedPlanDate,
-    startTime,
-    endTime,
-    title,
-    type,
-    done: false
-  });
+
+  const isEditing = Boolean(editingDayBlockId);
+  let item = isEditing ? state.dayBlocks.find(entry => entry.id === editingDayBlockId) : null;
+  if (isEditing && !item) {
+    resetDayBlockForm();
+    showToast('Dit tijdblok is niet meer gevonden.');
+    return;
+  }
+  if (!isEditing) {
+    item = { id: makeId('block'), done: false };
+    state.dayBlocks.push(item);
+  }
+  item.date = date;
+  item.startTime = startTime;
+  item.endTime = endTime;
+  item.title = title;
+  item.type = type;
+
+  selectedPlanDate = date;
+  resetDayBlockForm();
   saveState();
-  renderDayPlan();
-  document.getElementById('dayBlockTitle').value = '';
-  document.getElementById('dayBlockStart').value = '';
-  document.getElementById('dayBlockEnd').value = '';
-  showToast('Je tijdblok staat in het dagrooster.');
+  renderAgenda();
+  renderToday();
+  showToast(isEditing ? 'Je tijdblok is aangepast.' : 'Je tijdblok staat in het dagrooster.');
 });
 document.getElementById('dayPlanGroups').addEventListener('change', async event => {
   const agendaId = event.target.dataset.planAgendaDone;
@@ -1151,7 +1204,12 @@ document.getElementById('dayPlanGroups').addEventListener('change', async event 
   renderToday();
 });
 document.getElementById('dayPlanGroups').addEventListener('click', event => {
-  const id = event.target.dataset.planBlockDelete;
+  const editId = event.target.closest('[data-plan-block-edit]')?.dataset.planBlockEdit;
+  if (editId) {
+    beginDayBlockEdit(editId);
+    return;
+  }
+  const id = event.target.closest('[data-plan-block-delete]')?.dataset.planBlockDelete;
   if (!id) return;
   state.dayBlocks = state.dayBlocks.filter(item => item.id !== id);
   saveState();
