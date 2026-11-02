@@ -185,6 +185,7 @@ function recurringReminderText(activity) {
   if (activity.reminderStatus === 'website') return '🔔 Herinneringen werken in de Android-app';
   if (activity.reminderStatus === 'denied') return 'Meldingen staan uit op je telefoon';
   if (activity.reminderStatus === 'past') return 'De volgende herinnering wordt klaargezet bij het openen van de app';
+  if (activity.reminderStatus === 'done') return 'Deze week is alles afgevinkt';
   if (activity.reminderStatus === 'error') return 'Herinnering kon niet worden ingesteld';
   return 'Herinnering: ' + activity.reminderMinutes + ' min. vooraf';
 }
@@ -259,6 +260,7 @@ async function scheduleRecurringReminders(activity, requestPermission = true) {
   const today = new Date();
   today.setHours(12, 0, 0, 0);
   let scheduled = 0;
+  let completed = 0;
   let lastStatus = 'past';
   for (let offset = 0; offset <= 7; offset += 1) {
     const date = new Date(today);
@@ -267,12 +269,17 @@ async function scheduleRecurringReminders(activity, requestPermission = true) {
     const weekday = date.getDay() || 7;
     if (!Array.isArray(activity.weekdays) || !activity.weekdays.includes(weekday)) continue;
     if (activity.startsOn && dateISO < activity.startsOn) continue;
+    if (state.recurringCompletions.includes(recurringOccurrenceKey(activity.id, dateISO))) {
+      completed += 1;
+      continue;
+    }
     const status = await scheduleRecurringOccurrence(activity, dateISO);
     lastStatus = status;
     if (status === 'scheduled') scheduled += 1;
     if (status === 'denied' || status === 'error') break;
   }
   if (scheduled > 0) { activity.reminderStatus = 'scheduled'; return 'scheduled'; }
+  if (completed > 0) { activity.reminderStatus = 'done'; return 'done'; }
   if (lastStatus === 'denied' || lastStatus === 'error') { activity.reminderStatus = lastStatus; return lastStatus; }
   activity.reminderStatus = 'past';
   return 'past';
