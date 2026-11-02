@@ -33,7 +33,13 @@ const starterState = {
   selectedStepTask: 'ready',
   calmMode: false,
   fontScale: 1,
-  feeling: ''
+  feeling: '',
+  timer: {
+    durationSeconds: 300,
+    remainingSeconds: 300,
+    endsAt: null,
+    status: 'idle'
+  }
 };
 
 let state = loadState();
@@ -55,6 +61,16 @@ function loadState() {
       dayBlocks: Array.isArray(parsed.dayBlocks) ? parsed.dayBlocks : [],
       recurringActivities: Array.isArray(parsed.recurringActivities) ? parsed.recurringActivities : [],
       recurringCompletions: Array.isArray(parsed.recurringCompletions) ? parsed.recurringCompletions : [],
+      timer: parsed.timer && typeof parsed.timer === 'object'
+        ? {
+            durationSeconds: [300, 600, 900, 1800].includes(parsed.timer.durationSeconds) ? parsed.timer.durationSeconds : 300,
+            remainingSeconds: Number.isFinite(parsed.timer.remainingSeconds)
+              ? Math.max(0, Math.min(1800, Math.ceil(parsed.timer.remainingSeconds)))
+              : 300,
+            endsAt: Number.isFinite(parsed.timer.endsAt) ? parsed.timer.endsAt : null,
+            status: ['idle', 'running', 'paused', 'completed'].includes(parsed.timer.status) ? parsed.timer.status : 'idle'
+          }
+        : clone(starterState.timer),
       weekOffset: Number.isInteger(parsed.weekOffset) ? parsed.weekOffset : 0
     };
   } catch (error) {
@@ -576,8 +592,141 @@ function renderFeeling() {
     : 'Je keuze wordt alleen op dit apparaat bewaard.';
 }
 function renderAll() {
-  renderDate(); renderToday(); renderStepChoices(); renderSelectedSteps(); renderAgenda(); renderSettings(); renderFeeling();
+  renderDate(); renderToday(); renderStepChoices(); renderSelectedSteps(); renderAgenda(); renderSettings(); renderFeeling(); renderTimer();
 }
+const TIMER_NOTIFICATION_ID = notificationIdFor('rustige-timer');
+let timerInterval = null;
+
+function formatTimerTime(totalSeconds) {
+  const safeSeconds = Math.max(0, Math.ceil(totalSeconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+  return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+}
+function getTimerRemainingSeconds() {
+  if (state.timer.status !== 'running' || !state.timer.endsAt) return state.timer.remainingSeconds;
+  return Math.max(0, Math.ceil((state.timer.endsAt - Date.now()) / 1000));
+}
+function renderTimer() {
+  const display = document.getElementById('timerDisplay');
+  if (!display) return;
+  const remaining = getTimerRemainingSeconds();
+  display.textContent = formatTimerTime(remaining);
+  display.setAttribute('aria-label', Math.floor(remaining / 60) + ' minuten en ' + (remaining % 60) + ' seconden');
+  const message = document.getElementById('timerMessage');
+  const running = state.timer.status === 'running';
+  const paused = state.timer.status === 'paused';
+  const completed = state.timer.status === 'completed';
+  if (running) message.textContent = 'Je bent goed bezig. Neem rustig de tijd.';
+  else if (paused) message.textContent = 'De timer staat op pauze. Je kunt verdergaan wanneer je wilt.';
+  else if (completed) message.textContent = 'De tijd is om. Goed gedaan! Neem rustig een moment.';
+  else message.textContent = 'Kies een tijd en druk op start.';
+  document.getElementById('timerStart').textContent = paused ? '▶ Verder' : completed ? '▶ Opnieuw starten' : '▶ Start';
+  document.getElementById('timerStart').hidden = running;
+  document.getElementById('timerPause').hidden = !running;
+  document.getElementById('timerReset').hidden = state.timer.status === 'idle';
+  document.querySelectorAll('[data-timer-seconds]').forEach(button => {
+    const selected = Number(button.dataset.timerSeconds) === state.timer.durationSeconds;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+    button.disabled = running;
+  });
+  display.classList.toggle('is-running', running);
+  display.classList.toggle('is-complete', completed);
+}
+async function cancelTimerNotification() {
+  if (!window.StapNotifications || !window.StapNotifications.isNative) return;
+  try { await window.StapNotifications.cancel(TIMER_NOTIFICATION_ID); }
+  catch (error) { console.warn('De timerherinnering kon niet worden verwijderd.', error); }
+}
+async function scheduleTimerNotification() {
+  if (!window.StapNotifications || !window.StapNotifications.isNative || !state.timer.endsAt) return;
+  try {
+    const result = await window.StapNotifications.schedule({
+      id: TIMER_NOTIFICATION_ID,
+      title: 'Je timer is klaar',
+      body: 'Je tijd is om. Goed gedaan! Neem rustig een moment.',
+      at: new Date(state.timer.endsAt).toISOString()
+    });
+    if (result.status === 'denied') showToast('De timer loopt. Meldingen staan uit op je telefoon.');
+  } catch (error) {
+    console.warn('De timerherinnering kon niet worden ingesteld.', error);
+    showToast('De timer loopt, maar de telefoonmelding kon niet worden ingesteld.');
+  }
+}
+function stopTimerTicker() {
+  if (timerInterval !== null) { clearInterval(timerInterval); timerInterval = null; }
+}
+function finishTimer() {
+  if (state.timer.status !== 'running') return;
+  state.timer.status = 'completed';
+  state.timer.remainingSeconds = 0;
+  state.timer.endsAt = null;
+  stopTimerTicker();
+  saveState();
+  void cancelTimerNotification();
+  renderTimer();
+  showToast('De tijd is om. Goed gedaan!');
+}
+function updateTimerDisplay() {
+  if (state.timer.status !== 'running') { stopTimerTicker(); renderTimer(); return; }
+  if (getTimerRemainingSeconds() <= 0) { finishTimer(); return; }
+  renderTimer();
+}
+function startTimerTicker() {
+  stopTimerTicker();
+  if (state.timer.status !== 'running') { renderTimer(); return; }
+  updateTimerDisplay();
+  if (state.timer.status === 'running') timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+function startTimer() {
+  if (state.timer.status === 'running') return;
+  const remaining = state.timer.status === 'paused' ? state.timer.remainingSeconds : state.timer.durationSeconds;
+  if (remaining <= 0) {
+    state.timer.remainingSeconds = state.timer.durationSeconds;
+  }
+  state.timer.remainingSeconds = remaining > 0 ? remaining : state.timer.durationSeconds;
+  state.timer.endsAt = Date.now() + state.timer.remainingSeconds * 1000;
+  state.timer.status = 'running';
+  saveState();
+  renderTimer();
+  startTimerTicker();
+  void scheduleTimerNotification();
+}
+function pauseTimer() {
+  if (state.timer.status !== 'running') return;
+  state.timer.remainingSeconds = getTimerRemainingSeconds();
+  state.timer.endsAt = null;
+  state.timer.status = 'paused';
+  stopTimerTicker();
+  saveState();
+  renderTimer();
+  void cancelTimerNotification();
+}
+function resetTimer() {
+  state.timer.status = 'idle';
+  state.timer.remainingSeconds = state.timer.durationSeconds;
+  state.timer.endsAt = null;
+  stopTimerTicker();
+  saveState();
+  renderTimer();
+  void cancelTimerNotification();
+}
+document.querySelectorAll('[data-timer-seconds]').forEach(button => button.addEventListener('click', () => {
+  const duration = Number(button.dataset.timerSeconds);
+  if (![300, 600, 900, 1800].includes(duration) || state.timer.status === 'running') return;
+  state.timer.durationSeconds = duration;
+  state.timer.remainingSeconds = duration;
+  state.timer.status = 'idle';
+  state.timer.endsAt = null;
+  saveState();
+  renderTimer();
+  void cancelTimerNotification();
+}));
+document.getElementById('timerStart').addEventListener('click', startTimer);
+document.getElementById('timerPause').addEventListener('click', pauseTimer);
+document.getElementById('timerReset').addEventListener('click', resetTimer);
+
 function showView(name) {
   stopSpeech();
   document.querySelectorAll('.view').forEach(view => {
@@ -1111,6 +1260,7 @@ document.getElementById('resetData').addEventListener('click', () => {
 });
 
 renderAll();
+startTimerTicker();
 void refreshRecurringReminders();
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(error => console.warn('Offline opslaan is niet beschikbaar.', error)));

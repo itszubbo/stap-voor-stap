@@ -70,6 +70,31 @@
           </form>
         </section>
 
+        <section class="panel calm-timer-panel" aria-labelledby="calmTimerTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">NEEM RUSTIG DE TIJD</p>
+              <h2 id="calmTimerTitle">Rustige timer</h2>
+              <p class="muted">Kies een tijd om aan een taak te werken of even pauze te nemen.</p>
+            </div>
+            <span class="timer-icon" aria-hidden="true">⏳</span>
+          </div>
+          <div class="timer-presets" role="group" aria-label="Kies de tijd">
+            <button class="timer-preset active" type="button" data-timer-seconds="300" aria-pressed="true">5 min.</button>
+            <button class="timer-preset" type="button" data-timer-seconds="600" aria-pressed="false">10 min.</button>
+            <button class="timer-preset" type="button" data-timer-seconds="900" aria-pressed="false">15 min.</button>
+            <button class="timer-preset" type="button" data-timer-seconds="1800" aria-pressed="false">30 min.</button>
+          </div>
+          <div class="timer-clock" id="timerDisplay" role="timer" aria-live="off" aria-label="5 minuten en 0 seconden">05:00</div>
+          <p class="timer-message" id="timerMessage" aria-live="polite">Kies een tijd en druk op start.</p>
+          <div class="timer-controls">
+            <button class="button button-primary timer-start" id="timerStart" type="button">▶ Start</button>
+            <button class="button button-secondary" id="timerPause" type="button" hidden>⏸ Pauze</button>
+            <button class="button button-secondary" id="timerReset" type="button" hidden>↺ Opnieuw</button>
+          </div>
+          <p class="timer-note">In de Android-app kan je telefoon ook een rustige melding geven wanneer de tijd om is.</p>
+        </section>
+
         <section class="panel today-agenda-panel" aria-labelledby="todayAgendaTitle">
           <div class="panel-heading">
             <div><p class="eyebrow">MIJN DAGPLANNING</p><h2 id="todayAgendaTitle">Wat staat er vandaag op de planning?</h2></div>

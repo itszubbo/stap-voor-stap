@@ -100,3 +100,12 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - De komende week wordt klaargezet. Wanneer je de app opent, wordt de planning weer een week vooruit bijgewerkt.
 - Meldingen zijn zonder trillen en zonder exacte-alarmtoestemming. Android kan een melding soms iets later tonen.
 - Als je een vaste activiteit verwijdert of een uitvoering afvinkt, wordt de bijbehorende melding geannuleerd.
+
+
+### Rustige timer
+
+- Op de pagina Vandaag kun je kiezen voor 5, 10, 15 of 30 minuten.
+- De timer heeft grote knoppen voor starten, pauzeren en opnieuw beginnen.
+- De timer onthoudt de resterende tijd wanneer je de app sluit en later weer opent.
+- In de Android-app kan een lokale melding worden ingesteld wanneer de timer afloopt. Hiervoor is toestemming voor meldingen nodig; Android kan meldingen soms iets later tonen.
+- Op de website loopt de teller zolang de pagina open is. Er is daar geen telefoonmelding.
