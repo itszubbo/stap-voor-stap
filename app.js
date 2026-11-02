@@ -288,7 +288,14 @@ async function refreshRecurringReminders() {
   if (!window.StapNotifications || !window.StapNotifications.isNative) return;
   if (typeof window.StapNotifications.hasPermission !== 'function') return;
   try {
-    if (!(await window.StapNotifications.hasPermission())) return;
+    if (!(await window.StapNotifications.hasPermission())) {
+      state.recurringActivities.forEach(activity => {
+        if (activity.reminderMinutes) activity.reminderStatus = 'denied';
+      });
+      saveState();
+      renderAgenda();
+      return;
+    }
     for (const activity of state.recurringActivities) {
       if (activity.reminderMinutes && activity.time && activity.active !== false) {
         await scheduleRecurringReminders(activity, false);
@@ -381,6 +388,7 @@ function renderRecurringActivities() {
         <span>${escapeHtml(recurringWeekdayNames(activity.weekdays))}</span>
         <small>${time} · ${info.label}</small>
         ${activity.reminderMinutes ? `<span class="recurring-reminder">${escapeHtml(recurringReminderText(activity))}</span>` : ''}
+        ${activity.reminderMinutes && window.StapNotifications?.isNative && activity.reminderStatus !== 'scheduled' && activity.reminderStatus !== 'done' ? `<button class="text-button recurring-reminder-action" type="button" data-recurring-reminder-enable="${escapeHtml(activity.id)}">Meldingen instellen</button>` : ''}
       </div>
       <button class="agenda-delete" type="button" data-recurring-delete="${escapeHtml(activity.id)}" aria-label="Verwijder vaste activiteit: ${escapeHtml(activity.title)}">×</button>
     </li>`;
@@ -748,6 +756,19 @@ document.getElementById('recurringForm').addEventListener('submit', async event 
   }
 });
 document.getElementById('recurringActivityList').addEventListener('click', async event => {
+  const enableId = event.target.closest('[data-recurring-reminder-enable]')?.dataset.recurringReminderEnable;
+  if (enableId) {
+    const activity = state.recurringActivities.find(item => item.id === enableId);
+    if (!activity) return;
+    const status = await scheduleRecurringReminders(activity, true);
+    saveState();
+    renderAgenda();
+    renderToday();
+    if (status === 'scheduled') showToast('De herinneringen staan aan.');
+    else if (status === 'denied') showToast('Meldingen staan nog uit. Geef toestemming op je telefoon.');
+    else showToast('De herinnering kon niet worden ingesteld.');
+    return;
+  }
   const id = event.target.closest('[data-recurring-delete]')?.dataset.recurringDelete;
   if (!id) return;
   const activity = state.recurringActivities.find(item => item.id === id);
