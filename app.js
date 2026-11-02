@@ -2,6 +2,7 @@
 
 const STORAGE_KEY = 'stap-voor-stap-v1';
 const starterState = {
+  agenda: [],
   tasks: [
     { id: 'task-1', title: 'Opstaan en aankleden', done: false },
     { id: 'task-2', title: 'Ontbijten', done: false },
@@ -45,7 +46,9 @@ function loadState() {
       ...clone(starterState),
       ...parsed,
       tasks: Array.isArray(parsed.tasks) ? parsed.tasks : clone(starterState.tasks),
-      stepTasks: Array.isArray(parsed.stepTasks) ? parsed.stepTasks : clone(starterState.stepTasks)
+      stepTasks: Array.isArray(parsed.stepTasks) ? parsed.stepTasks : clone(starterState.stepTasks),
+      agenda: Array.isArray(parsed.agenda) ? parsed.agenda : [],
+      weekOffset: Number.isInteger(parsed.weekOffset) ? parsed.weekOffset : 0
     };
   } catch (error) {
     console.warn('De opgeslagen gegevens konden niet worden gelezen.', error);
@@ -123,6 +126,73 @@ function renderSelectedSteps() {
       <button type="button" data-delete-step="${escapeHtml(step.id)}" aria-label="Verwijder stap: ${escapeHtml(step.text)}">×</button>
     </li>`).join('');
 }
+function toLocalISO(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+function getWeekStart(offset = 0) {
+  const today = new Date();
+  const mondayOffset = (today.getDay() + 6) % 7;
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate() - mondayOffset + (offset * 7));
+}
+function formatAgendaDate(date) {
+  return new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
+}
+function agendaTypeInfo(type) {
+  const types = {
+    home: { icon: '🏠', label: 'Thuis' },
+    appointment: { icon: '🩺', label: 'Afspraak' },
+    work: { icon: '💼', label: 'Werk of dagbesteding' },
+    care: { icon: '❤️', label: 'Zorg of begeleiding' },
+    fun: { icon: '🎨', label: 'Vrije tijd' },
+    travel: { icon: '🚌', label: 'Reizen' }
+  };
+  return types[type] || types.appointment;
+}
+function renderAgenda() {
+  const start = getWeekStart(state.weekOffset || 0);
+  const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+  const sameMonth = start.getMonth() === end.getMonth();
+  const startText = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: sameMonth ? undefined : 'long' }).format(start);
+  const endText = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }).format(end);
+  document.getElementById('weekTitle').textContent = `${startText} t/m ${endText}`;
+  const days = Array.from({ length: 7 }, (_, index) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + index));
+  const todayISO = toLocalISO(new Date());
+  document.getElementById('weekDays').innerHTML = days.map(day => {
+    const dayISO = toLocalISO(day);
+    const items = state.agenda
+      .filter(item => item.date === dayISO)
+      .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+    const list = items.length ? items.map(item => {
+      const info = agendaTypeInfo(item.type);
+      return `
+        <li class="agenda-item ${item.done ? 'done' : ''}">
+          <span class="agenda-icon" aria-hidden="true">${info.icon}</span>
+          <div class="agenda-item-copy">
+            <span class="agenda-time">${item.time ? escapeHtml(item.time) : 'Hele dag'} · ${info.label}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+          </div>
+          <label class="agenda-done-label">
+            <input type="checkbox" data-agenda-done="${escapeHtml(item.id)}" ${item.done ? 'checked' : ''}>
+            <span>Klaar</span>
+          </label>
+          <button class="agenda-delete" type="button" data-agenda-delete="${escapeHtml(item.id)}" aria-label="Verwijder afspraak: ${escapeHtml(item.title)}">×</button>
+        </li>`;
+    }).join('') : '<li class="agenda-empty">Nog niets gepland.</li>';
+    return `
+      <section class="agenda-day ${dayISO === todayISO ? 'is-today' : ''}" aria-label="${escapeHtml(formatAgendaDate(day))}">
+        <div class="agenda-day-heading">
+          <h3>${escapeHtml(formatAgendaDate(day))}</h3>
+          ${dayISO === todayISO ? '<span class="today-label">Vandaag</span>' : ''}
+        </div>
+        <ul class="agenda-items">${list}</ul>
+      </section>`;
+  }).join('');
+  const dateInput = document.getElementById('agendaDate');
+  if (!dateInput.value) dateInput.value = todayISO;
+}
 function renderSettings() {
   document.body.classList.toggle('calm-mode', Boolean(state.calmMode));
   document.documentElement.style.setProperty('--base-font', `${17 * state.fontScale}px`);
@@ -141,7 +211,7 @@ function renderFeeling() {
     : 'Je keuze wordt alleen op dit apparaat bewaard.';
 }
 function renderAll() {
-  renderDate(); renderToday(); renderStepChoices(); renderSelectedSteps(); renderSettings(); renderFeeling();
+  renderDate(); renderToday(); renderStepChoices(); renderSelectedSteps(); renderAgenda(); renderSettings(); renderFeeling();
 }
 function showView(name) {
   document.querySelectorAll('.view').forEach(view => {
@@ -158,6 +228,61 @@ function showView(name) {
 // Navigatie
 for (const button of document.querySelectorAll('.nav-button')) button.addEventListener('click', () => showView(button.dataset.view));
 document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => showView(button.dataset.go)));
+
+// Weekplanner en persoonlijke agenda
+document.getElementById('previousWeek').addEventListener('click', () => {
+  state.weekOffset = (state.weekOffset || 0) - 1;
+  renderAgenda();
+});
+document.getElementById('nextWeek').addEventListener('click', () => {
+  state.weekOffset = (state.weekOffset || 0) + 1;
+  renderAgenda();
+});
+document.getElementById('currentWeek').addEventListener('click', () => {
+  state.weekOffset = 0;
+  renderAgenda();
+});
+document.getElementById('agendaForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const date = document.getElementById('agendaDate').value;
+  const time = document.getElementById('agendaTime').value;
+  const title = document.getElementById('agendaTitleInput').value.trim();
+  const type = document.getElementById('agendaType').value;
+  if (!date || !title) {
+    showToast('Vul een dag en een activiteit in.');
+    return;
+  }
+  state.agenda.push({ id: makeId('agenda'), date, time, title, type, done: false });
+  state.weekOffset = Math.round((new Date(date + 'T12:00:00') - getWeekStart(0)) / (7 * 24 * 60 * 60 * 1000));
+  // Bepaal de week opnieuw op basis van de gekozen datum.
+  const selectedDate = new Date(date + 'T12:00:00');
+  const thisMonday = getWeekStart(0);
+  const selectedMonday = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - ((selectedDate.getDay() + 6) % 7));
+  state.weekOffset = Math.round((selectedMonday - thisMonday) / (7 * 24 * 60 * 60 * 1000));
+  document.getElementById('agendaTitleInput').value = '';
+  document.getElementById('agendaTime').value = '';
+  saveState();
+  renderAgenda();
+  showToast('De afspraak staat in je agenda.');
+});
+document.getElementById('weekDays').addEventListener('change', event => {
+  const id = event.target.dataset.agendaDone;
+  if (!id) return;
+  const item = state.agenda.find(entry => entry.id === id);
+  if (item) {
+    item.done = event.target.checked;
+    saveState();
+    renderAgenda();
+  }
+});
+document.getElementById('weekDays').addEventListener('click', event => {
+  const id = event.target.dataset.agendaDelete;
+  if (!id) return;
+  state.agenda = state.agenda.filter(item => item.id !== id);
+  saveState();
+  renderAgenda();
+  showToast('De afspraak is verwijderd.');
+});
 
 // Taken voor vandaag
 document.getElementById('quickAddForm').addEventListener('submit', event => {
