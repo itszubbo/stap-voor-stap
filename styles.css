@@ -419,3 +419,60 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
   body.print-week .agenda-empty { padding: 4px 0 !important; color: #555 !important; font-size: 8pt !important; }
   body.print-week * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+
+/* Weekoverzicht afdrukken */
+.agenda-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 8px; }
+.print-help-note { margin-top: 0; }
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  body.print-week { background: #fff !important; color: #111 !important; font-size: 10pt; }
+  body.print-week .topbar,
+  body.print-week .sidebar,
+  body.print-week .footer,
+  body.print-week .toast { display: none !important; }
+  body.print-week .app-shell { display: block !important; min-height: 0 !important; }
+  body.print-week .main-content { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+  body.print-week .view:not(#view-agenda) { display: none !important; }
+  body.print-week #view-agenda { display: block !important; animation: none !important; }
+  body.print-week #view-agenda > :not(.page-heading):not(.agenda-panel) { display: none !important; }
+  body.print-week #view-agenda .page-heading { display: block !important; margin: 0 0 6mm !important; }
+  body.print-week #view-agenda .page-heading .eyebrow { display: none !important; }
+  body.print-week #view-agenda .page-heading h1 { font-size: 22pt !important; margin: 0 0 2mm !important; }
+  body.print-week #view-agenda .page-heading .intro { margin: 0 !important; font-size: 10pt !important; }
+  body.print-week .agenda-panel { padding: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+  body.print-week .agenda-toolbar,
+  body.print-week .print-help-note,
+  body.print-week .week-bar > button,
+  body.print-week #currentWeek,
+  body.print-week .agenda-edit,
+  body.print-week .agenda-delete,
+  body.print-week .agenda-done-label { display: none !important; }
+  body.print-week .week-bar { display: block !important; margin: 0 0 5mm !important; }
+  body.print-week .week-heading { display: block !important; }
+  body.print-week .week-heading h2 { font-size: 14pt !important; }
+  body.print-week .week-days { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 4mm !important; }
+  body.print-week .agenda-day {
+    margin: 0 !important;
+    padding: 3mm !important;
+    border: 1px solid #b9c3bf !important;
+    border-radius: 2mm !important;
+    background: #fff !important;
+    color: #111 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  body.print-week .agenda-day.is-today { border: 2px solid #555 !important; background: #fff !important; }
+  body.print-week .agenda-day-heading { margin-bottom: 2mm !important; }
+  body.print-week .agenda-day-heading h3 { color: #111 !important; font-size: 11pt !important; }
+  body.print-week .today-label { color: #111 !important; border: 1px solid #777 !important; background: #fff !important; }
+  body.print-week .agenda-items { gap: 1mm !important; }
+  body.print-week .agenda-item { display: flex !important; gap: 2mm !important; padding: 2mm 0 !important; border-bottom: 1px solid #ddd !important; background: #fff !important; color: #111 !important; }
+  body.print-week .agenda-icon { font-size: 11pt !important; }
+  body.print-week .agenda-item-copy strong { color: #111 !important; font-size: 9.5pt !important; }
+  body.print-week .agenda-time,
+  body.print-week .recurring-tag,
+  body.print-week .reminder-tag { color: #333 !important; font-size: 8pt !important; }
+  body.print-week .agenda-empty { color: #555 !important; font-size: 9pt !important; }
+  body.print-week .agenda-item.done .agenda-item-copy strong { text-decoration: line-through; color: #555 !important; }
+}

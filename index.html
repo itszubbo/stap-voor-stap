@@ -220,7 +220,11 @@
         </div>
 
         <section class="panel agenda-panel" aria-label="Weekoverzicht">
-          <div class="speech-toolbar"><button class="button button-secondary speech-button" type="button" data-speak="agenda" aria-pressed="false">🔊 Lees mijn week voor</button></div>
+          <div class="speech-toolbar agenda-toolbar">
+            <button class="button button-secondary speech-button" type="button" data-speak="agenda" aria-pressed="false">🔊 Lees mijn week voor</button>
+            <button class="button button-secondary" id="printWeekOverview" type="button">🖨️ Print weekoverzicht</button>
+          </div>
+          <p class="small-note print-help-note">Je kunt je week afdrukken via de browser. Kies eventueel ‘Opslaan als PDF’.</p>
           <div class="week-bar">
             <button class="button button-secondary" id="previousWeek" type="button" aria-label="Vorige week">← Vorige</button>
             <div class="week-heading">

@@ -789,6 +789,15 @@ document.getElementById('currentWeek').addEventListener('click', () => {
   state.weekOffset = 0;
   renderAgenda();
 });
+document.getElementById('printWeekOverview').addEventListener('click', () => {
+  if (typeof window.print !== 'function') {
+    showToast('Afdrukken is niet beschikbaar in deze browser.');
+    return;
+  }
+  document.body.classList.add('print-week');
+  window.addEventListener('afterprint', () => document.body.classList.remove('print-week'), { once: true });
+  window.print();
+});
 function setAgendaFormMode(isEditing) {
   document.getElementById('addAgendaTitle').textContent = isEditing ? 'Afspraak aanpassen' : 'Voeg een afspraak toe';
   document.getElementById('agendaFormIntro').textContent = isEditing

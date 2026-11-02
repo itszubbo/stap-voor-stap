@@ -152,3 +152,12 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - Menu's, invoervelden en bewerkknoppen worden niet afgedrukt.
 - In de browser kun je het overzicht afdrukken of bij de printerkeuze opslaan als PDF.
 - Deze functie is bedoeld voor de website in een browser; de knop wordt in de Android-app verborgen.
+
+
+### Weekoverzicht afdrukken
+
+- Open **Week & agenda** en kies **Print weekoverzicht**.
+- De afdruk toont alle zeven dagen van de gekozen week, inclusief vaste activiteiten en eigen afspraken.
+- De afdruk is rustig opgemaakt op A4 en laat bewerkknoppen weg.
+- In het afdrukscherm van de browser kun je ook **Opslaan als PDF** kiezen.
+- De printfunctie is bedoeld voor de website in een browser. In de Android-app is afdrukken afhankelijk van de ondersteuning van het apparaat.
