@@ -223,7 +223,7 @@
             <li class="recurring-empty">Je hebt nog geen vaste activiteiten ingesteld.</li>
           </ul>
           <details class="recurring-editor">
-            <summary>+ Voeg een vaste activiteit toe</summary>
+            <summary id="recurringEditorSummary">+ Voeg een vaste activiteit toe</summary>
             <form id="recurringForm" class="recurring-form">
               <div class="agenda-field recurring-title-field">
                 <label for="recurringActivityName">Wat wil je elke week doen?</label>
@@ -271,7 +271,10 @@
                 </div>
               </fieldset>
               <p class="recurring-reminder-note">Op Android worden meldingen voor de komende week klaargezet. Open de app regelmatig om ze bij te werken.</p>
-              <button class="button button-primary recurring-submit" type="submit">Vaste activiteit opslaan</button>
+              <div class="recurring-form-actions">
+                <button class="button button-primary recurring-submit" id="recurringFormSubmit" type="submit">Vaste activiteit opslaan</button>
+                <button class="button button-secondary" id="recurringCancelEdit" type="button" hidden>Annuleren</button>
+              </div>
             </form>
           </details>
         </section>

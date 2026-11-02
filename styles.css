@@ -340,3 +340,12 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
 .agenda-form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .agenda-form-actions .agenda-submit { grid-column: auto; }
 @media (max-width: 650px) { .agenda-form-actions { display: grid; grid-template-columns: 1fr; } .agenda-form-actions .button { width: 100%; } }
+
+/* Vaste activiteiten aanpassen */
+.recurring-actions { display: flex; align-items: center; gap: 2px; }
+.recurring-form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.recurring-form-actions .recurring-submit { grid-column: auto; }
+@media (max-width: 650px) {
+  .recurring-form-actions { display: grid; grid-template-columns: 1fr; }
+  .recurring-form-actions .button { width: 100%; }
+}

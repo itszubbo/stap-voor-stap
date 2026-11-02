@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stap-voor-stap-v9'
+const CACHE_NAME = 'stap-voor-stap-v10'
 const FILES = ['./', './index.html', './styles.css', './app.js', './native-notifications.js', './manifest.webmanifest', './icon.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(FILES)));

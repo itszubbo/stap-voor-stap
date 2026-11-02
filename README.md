@@ -117,3 +117,12 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - Je kunt de dag, tijd, naam, soort activiteit en herinnering wijzigen.
 - Bij het opslaan wordt de oude herinnering verwijderd en, als je dat kiest, de nieuwe herinnering klaargezet.
 - Vaste activiteiten die iedere week terugkomen beheer je apart bij het onderdeel vaste activiteiten.
+
+
+### Vaste activiteiten aanpassen
+
+- Bij elke vaste activiteit staat nu een potloodknop om deze te wijzigen.
+- Je kunt de naam, tijd, pictogram, herinnering en weekdagen aanpassen.
+- De bestaande activiteit blijft behouden; de herinneringen worden opnieuw ingesteld.
+- Afvinkjes blijven staan voor dagen waarop de activiteit nog steeds terugkomt. Afvinkjes voor verwijderde weekdagen worden opgeruimd.
+- Met Annuleren sluit je het aanpassen zonder wijzigingen op te slaan.

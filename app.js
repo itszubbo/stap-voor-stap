@@ -46,6 +46,7 @@ let state = loadState();
 let toastTimer;
 let selectedPlanDate = toLocalISO(new Date());
 let editingAgendaId = null;
+let editingRecurringId = null;
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function loadState() {
@@ -410,7 +411,10 @@ function renderRecurringActivities() {
         ${activity.reminderMinutes ? `<span class="recurring-reminder">${escapeHtml(recurringReminderText(activity))}</span>` : ''}
         ${activity.reminderMinutes && window.StapNotifications?.isNative && activity.reminderStatus !== 'scheduled' && activity.reminderStatus !== 'done' ? `<button class="text-button recurring-reminder-action" type="button" data-recurring-reminder-enable="${escapeHtml(activity.id)}">Meldingen instellen</button>` : ''}
       </div>
-      <button class="agenda-delete" type="button" data-recurring-delete="${escapeHtml(activity.id)}" aria-label="Verwijder vaste activiteit: ${escapeHtml(activity.title)}">×</button>
+      <div class="recurring-actions">
+        <button class="agenda-edit" type="button" data-recurring-edit="${escapeHtml(activity.id)}" aria-label="Pas vaste activiteit aan: ${escapeHtml(activity.title)}" title="Aanpassen">✎</button>
+        <button class="agenda-delete" type="button" data-recurring-delete="${escapeHtml(activity.id)}" aria-label="Verwijder vaste activiteit: ${escapeHtml(activity.title)}" title="Verwijderen">×</button>
+      </div>
     </li>`;
   }).join('');
 }
@@ -901,6 +905,53 @@ document.getElementById('weekDays').addEventListener('click', async event => {
 });
 
 // Vaste activiteiten die iedere week terugkomen
+
+function setRecurringFormMode(isEditing) {
+  const details = document.querySelector('.recurring-editor');
+  document.getElementById('recurringEditorSummary').textContent = isEditing
+    ? 'Vaste activiteit aanpassen'
+    : '+ Voeg een vaste activiteit toe';
+  document.getElementById('recurringFormSubmit').textContent = isEditing
+    ? 'Wijzigingen opslaan'
+    : 'Vaste activiteit opslaan';
+  document.getElementById('recurringCancelEdit').hidden = !isEditing;
+  if (details) details.open = Boolean(isEditing);
+}
+function resetRecurringForm() {
+  editingRecurringId = null;
+  document.getElementById('recurringForm').reset();
+  document.getElementById('recurringReminder').value = '0';
+  document.querySelectorAll('input[name="recurringDay"]').forEach(input => { input.checked = false; });
+  setRecurringFormMode(false);
+}
+function beginRecurringEdit(id) {
+  const activity = state.recurringActivities.find(item => item.id === id);
+  if (!activity) return;
+  editingRecurringId = id;
+  document.getElementById('recurringActivityName').value = activity.title || '';
+  document.getElementById('recurringTime').value = activity.time || '';
+  document.getElementById('recurringEndTime').value = activity.endTime || '';
+  document.getElementById('recurringReminder').value = String(activity.reminderMinutes || 0);
+  document.getElementById('recurringType').value = activity.type || 'appointment';
+  document.querySelectorAll('input[name="recurringDay"]').forEach(input => {
+    input.checked = Array.isArray(activity.weekdays) && activity.weekdays.includes(Number(input.value));
+  });
+  setRecurringFormMode(true);
+  document.getElementById('recurringForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('recurringActivityName').focus({ preventScroll: true });
+}
+function removeCompletionsForRemovedWeekdays(activityId, weekdays) {
+  const prefix = activityId + '|';
+  state.recurringCompletions = state.recurringCompletions.filter(key => {
+    if (!key.startsWith(prefix)) return true;
+    const dateISO = key.slice(prefix.length);
+    const date = new Date(dateISO + 'T12:00:00');
+    if (Number.isNaN(date.getTime())) return false;
+    const weekday = date.getDay() || 7;
+    return weekdays.includes(weekday);
+  });
+}
+
 document.getElementById('recurringForm').addEventListener('submit', async event => {
   event.preventDefault();
   const title = document.getElementById('recurringActivityName').value.trim();
@@ -933,41 +984,70 @@ document.getElementById('recurringForm').addEventListener('submit', async event 
     return;
   }
 
-  const activity = {
-    id: makeId('repeat'),
-    title,
-    time,
-    endTime,
-    reminderMinutes,
-    notificationIds: [],
-    type,
-    weekdays,
-    startsOn: toLocalISO(new Date()),
-    active: true
-  };
-  state.recurringActivities.push(activity);
+  const isEditing = Boolean(editingRecurringId);
+  let activity = isEditing
+    ? state.recurringActivities.find(item => item.id === editingRecurringId)
+    : null;
+  if (isEditing && !activity) {
+    resetRecurringForm();
+    showToast('Deze vaste activiteit is niet meer gevonden.');
+    return;
+  }
+
+  if (isEditing) {
+    await cancelRecurringReminders(activity);
+    activity.title = title;
+    activity.time = time;
+    activity.endTime = endTime;
+    activity.reminderMinutes = reminderMinutes;
+    activity.type = type;
+    removeCompletionsForRemovedWeekdays(activity.id, weekdays);
+    activity.weekdays = weekdays;
+    delete activity.reminderStatus;
+  } else {
+    activity = {
+      id: makeId('repeat'),
+      title,
+      time,
+      endTime,
+      reminderMinutes,
+      notificationIds: [],
+      type,
+      weekdays,
+      startsOn: toLocalISO(new Date()),
+      active: true
+    };
+    state.recurringActivities.push(activity);
+  }
+
+  resetRecurringForm();
   saveState();
   renderAgenda();
   renderToday();
-  document.getElementById('recurringActivityName').value = '';
-  document.getElementById('recurringTime').value = '';
-  document.getElementById('recurringEndTime').value = '';
-  document.getElementById('recurringReminder').value = '0';
-  document.querySelectorAll('input[name="recurringDay"]').forEach(input => { input.checked = false; });
 
   if (reminderMinutes) {
     const status = await scheduleRecurringReminders(activity, true);
     saveState();
     renderAgenda();
-    if (status === 'scheduled') showToast('Vaste activiteit opgeslagen. Je krijgt meldingen op de gekozen dagen.');
+    if (status === 'scheduled') showToast(isEditing ? 'Je vaste activiteit is aangepast. De herinneringen staan klaar.' : 'Vaste activiteit opgeslagen. Je krijgt meldingen op de gekozen dagen.');
     else if (status === 'website') showToast('Vaste activiteit opgeslagen. Herinneringen werken in de Android-app.');
     else if (status === 'denied') showToast('Vaste activiteit opgeslagen. Meldingen staan uit op je telefoon.');
+    else if (status === 'done') showToast('De vaste activiteit is aangepast. Alle komende momenten zijn al afgevinkt.');
     else showToast('Vaste activiteit opgeslagen. De herinnering kon niet worden ingesteld.');
   } else {
-    showToast('Je vaste activiteit is opgeslagen.');
+    showToast(isEditing ? 'Je vaste activiteit is aangepast.' : 'Je vaste activiteit is opgeslagen.');
   }
 });
+document.getElementById('recurringCancelEdit').addEventListener('click', () => {
+  resetRecurringForm();
+  showToast('Aanpassen geannuleerd.');
+});
 document.getElementById('recurringActivityList').addEventListener('click', async event => {
+  const editId = event.target.closest('[data-recurring-edit]')?.dataset.recurringEdit;
+  if (editId) {
+    beginRecurringEdit(editId);
+    return;
+  }
   const enableId = event.target.closest('[data-recurring-reminder-enable]')?.dataset.recurringReminderEnable;
   if (enableId) {
     const activity = state.recurringActivities.find(item => item.id === enableId);
