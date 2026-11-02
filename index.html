@@ -28,6 +28,7 @@
       <nav class="main-nav">
         <button class="nav-button active" data-view="vandaag" type="button"><span aria-hidden="true">☀</span> Vandaag</button>
         <button class="nav-button" data-view="stappen" type="button"><span aria-hidden="true">✓</span> Mijn stappen</button>
+        <button class="nav-button" data-view="agenda" type="button"><span aria-hidden="true">📅</span> Week & agenda</button>
         <button class="nav-button" data-view="rust" type="button"><span aria-hidden="true">♡</span> Rust & hulp</button>
         <button class="nav-button" data-view="instellingen" type="button"><span aria-hidden="true">⚙</span> Instellingen</button>
       </nav>
@@ -108,6 +109,59 @@
             <p class="small-note">Je mag een stap overslaan of later verdergaan.</p>
           </section>
         </div>
+      </section>
+
+      <section class="view" id="view-agenda" aria-labelledby="agendaTitle" hidden>
+        <div class="page-heading">
+          <p class="eyebrow">MIJN PLANNING</p>
+          <h1 id="agendaTitle">Mijn week & afspraken</h1>
+          <p class="intro">Bekijk wat er op de planning staat. Je kunt afspraken zelf toevoegen.</p>
+        </div>
+
+        <section class="panel agenda-panel" aria-label="Weekoverzicht">
+          <div class="week-bar">
+            <button class="button button-secondary" id="previousWeek" type="button" aria-label="Vorige week">← Vorige</button>
+            <div class="week-heading">
+              <h2 id="weekTitle">Deze week</h2>
+              <button class="text-button" id="currentWeek" type="button">Ga naar deze week</button>
+            </div>
+            <button class="button button-secondary" id="nextWeek" type="button" aria-label="Volgende week">Volgende →</button>
+          </div>
+          <div class="week-days" id="weekDays" aria-live="polite"></div>
+        </section>
+
+        <section class="panel add-agenda-panel" aria-labelledby="addAgendaTitle">
+          <p class="eyebrow">ZELF PLANNEN</p>
+          <h2 id="addAgendaTitle">Voeg een afspraak toe</h2>
+          <p class="muted">Kies een dag en schrijf op wat je gaat doen.</p>
+          <form id="agendaForm" class="agenda-form">
+            <div class="agenda-field">
+              <label for="agendaDate">Welke dag?</label>
+              <input id="agendaDate" name="date" type="date" required>
+            </div>
+            <div class="agenda-field">
+              <label for="agendaTime">Hoe laat? (mag leeg blijven)</label>
+              <input id="agendaTime" name="time" type="time">
+            </div>
+            <div class="agenda-field agenda-title-field">
+              <label for="agendaTitleInput">Wat ga je doen?</label>
+              <input id="agendaTitleInput" name="title" type="text" maxlength="70" placeholder="Bijvoorbeeld: naar de tandarts" required>
+            </div>
+            <div class="agenda-field">
+              <label for="agendaType">Wat voor activiteit?</label>
+              <select id="agendaType" name="type">
+                <option value="home">🏠 Thuis</option>
+                <option value="appointment">🩺 Afspraak</option>
+                <option value="work">💼 Werk of dagbesteding</option>
+                <option value="care">❤️ Zorg of begeleiding</option>
+                <option value="fun">🎨 Vrije tijd</option>
+                <option value="travel">🚌 Reizen</option>
+              </select>
+            </div>
+            <button class="button button-primary agenda-submit" type="submit">+ Zet in mijn agenda</button>
+          </form>
+          <p class="small-note">Je agenda is alleen op dit apparaat opgeslagen.</p>
+        </section>
       </section>
 
       <section class="view" id="view-rust" aria-labelledby="calmTitle" hidden>
