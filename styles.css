@@ -360,3 +360,6 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
   .day-block-form-actions { display: grid; grid-template-columns: 1fr; }
   .day-block-form-actions .button { width: 100%; }
 }
+
+.day-block-form .recurring-reminder-note { grid-column: 1 / -1; }
+@media (max-width: 650px) { .day-block-form .recurring-reminder-note { grid-column: auto; } }

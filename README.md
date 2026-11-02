@@ -134,3 +134,12 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - Je kunt de dag, begin- en eindtijd, naam en pictogram wijzigen.
 - De bestaande afvinkstatus blijft behouden.
 - Met Annuleren sluit je de bewerking zonder wijzigingen op te slaan.
+
+
+### Herinneringen bij tijdblokken
+
+- Zelf toegevoegde tijdblokken kunnen een melding krijgen 5, 10, 15 of 30 minuten vooraf.
+- Een begintijd is verplicht; datum, tijd en titel worden gebruikt voor de melding.
+- De melding wordt bijgewerkt wanneer een tijdblok wordt aangepast.
+- Als je een tijdblok afvinkt of verwijdert, wordt de bijbehorende melding geannuleerd.
+- Op de website wordt de keuze getoond; echte toestelmeldingen werken in de Android-app.

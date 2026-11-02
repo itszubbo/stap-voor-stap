@@ -118,7 +118,7 @@ async function scheduleAppointmentReminder(item) {
     const notificationId = notificationIdFor(item.id);
     const result = await window.StapNotifications.schedule({
       id: notificationId,
-      title: 'Je afspraak komt eraan',
+      title: 'Je geplande activiteit komt eraan',
       body: `Over ${item.reminderMinutes} minuten: ${item.title}`,
       at: at.toISOString()
     });
@@ -465,7 +465,7 @@ function renderDayPlan() {
           <span class="day-plan-time">${timeLabel}</span>
           <strong>${escapeHtml(item.title)}</strong>
           <span class="day-plan-kind">${info.label}${isBlock ? ' · Mijn tijdblok' : isRecurring ? ' · Herhaalt elke week' : ' · Agenda'}</span>
-          ${item.reminderMinutes && !isBlock ? `<span class="reminder-tag">${isRecurring ? recurringReminderText(item) : reminderStatusText(item)}</span>` : ''}
+          ${item.reminderMinutes ? `<span class="reminder-tag">${isRecurring ? recurringReminderText(item) : reminderStatusText(item)}</span>` : ''}
         </div>
         <div class="day-plan-actions">
           <label class="day-plan-done">
@@ -1111,6 +1111,7 @@ function resetDayBlockForm() {
   editingDayBlockId = null;
   document.getElementById('dayBlockForm').reset();
   document.getElementById('dayBlockDate').value = selectedPlanDate;
+  document.getElementById('dayBlockReminder').value = '0';
   setDayBlockFormMode(false);
 }
 function beginDayBlockEdit(id) {
@@ -1123,6 +1124,7 @@ function beginDayBlockEdit(id) {
   document.getElementById('dayBlockEnd').value = item.endTime || '';
   document.getElementById('dayBlockTitle').value = item.title || '';
   document.getElementById('dayBlockType').value = item.type || 'appointment';
+  document.getElementById('dayBlockReminder').value = String(item.reminderMinutes || 0);
   setDayBlockFormMode(true);
   renderDayPlan();
   document.getElementById('dayBlockDate').value = item.date;
@@ -1134,13 +1136,14 @@ document.getElementById('dayBlockCancel').addEventListener('click', () => {
   resetDayBlockForm();
   showToast('Aanpassen geannuleerd.');
 });
-document.getElementById('dayBlockForm').addEventListener('submit', event => {
+document.getElementById('dayBlockForm').addEventListener('submit', async event => {
   event.preventDefault();
   const date = document.getElementById('dayBlockDate').value;
   const startTime = document.getElementById('dayBlockStart').value;
   const endTime = document.getElementById('dayBlockEnd').value;
   const title = document.getElementById('dayBlockTitle').value.trim();
   const type = document.getElementById('dayBlockType').value;
+  const reminderMinutes = Number(document.getElementById('dayBlockReminder').value || 0);
   if (!date || !startTime || !title) {
     showToast('Vul een dag, begintijd en activiteit in.');
     return;
@@ -1152,6 +1155,10 @@ document.getElementById('dayBlockForm').addEventListener('submit', event => {
   }
 
   const isEditing = Boolean(editingDayBlockId);
+  if (isEditing) {
+    const existing = state.dayBlocks.find(entry => entry.id === editingDayBlockId);
+    if (existing) await cancelAppointmentReminder(existing);
+  }
   let item = isEditing ? state.dayBlocks.find(entry => entry.id === editingDayBlockId) : null;
   if (isEditing && !item) {
     resetDayBlockForm();
@@ -1167,13 +1174,29 @@ document.getElementById('dayBlockForm').addEventListener('submit', event => {
   item.endTime = endTime;
   item.title = title;
   item.type = type;
+  item.reminderMinutes = reminderMinutes;
+  delete item.reminderStatus;
+  delete item.notificationId;
 
   selectedPlanDate = date;
   resetDayBlockForm();
   saveState();
   renderAgenda();
   renderToday();
-  showToast(isEditing ? 'Je tijdblok is aangepast.' : 'Je tijdblok staat in het dagrooster.');
+
+  if (!reminderMinutes || item.done) {
+    showToast(isEditing ? 'Je tijdblok is aangepast.' : 'Je tijdblok staat in het dagrooster.');
+    return;
+  }
+  const status = await scheduleAppointmentReminder(item);
+  saveState();
+  renderAgenda();
+  renderToday();
+  if (status === 'scheduled') showToast('Tijdblok opgeslagen. Je krijgt ' + reminderMinutes + ' minuten van tevoren een melding.');
+  else if (status === 'website') showToast('Tijdblok opgeslagen. Herinneringen werken in de Android-app.');
+  else if (status === 'past') showToast('Tijdblok opgeslagen. De gekozen herinneringstijd is al voorbij.');
+  else if (status === 'denied') showToast('Tijdblok opgeslagen. Meldingen staan uit op je telefoon.');
+  else showToast('Tijdblok opgeslagen. De herinnering kon niet worden ingesteld.');
 });
 document.getElementById('dayPlanGroups').addEventListener('change', async event => {
   const agendaId = event.target.dataset.planAgendaDone;
@@ -1196,6 +1219,12 @@ document.getElementById('dayPlanGroups').addEventListener('change', async event 
     const item = state.dayBlocks.find(entry => entry.id === blockId);
     if (!item) return;
     item.done = event.target.checked;
+    if (item.done) {
+      await cancelAppointmentReminder(item);
+      item.reminderStatus = 'cancelled';
+    } else if (item.reminderMinutes) {
+      await scheduleAppointmentReminder(item);
+    }
   } else {
     return;
   }
@@ -1203,7 +1232,7 @@ document.getElementById('dayPlanGroups').addEventListener('change', async event 
   renderAgenda();
   renderToday();
 });
-document.getElementById('dayPlanGroups').addEventListener('click', event => {
+document.getElementById('dayPlanGroups').addEventListener('click', async event => {
   const editId = event.target.closest('[data-plan-block-edit]')?.dataset.planBlockEdit;
   if (editId) {
     beginDayBlockEdit(editId);
@@ -1211,6 +1240,8 @@ document.getElementById('dayPlanGroups').addEventListener('click', event => {
   }
   const id = event.target.closest('[data-plan-block-delete]')?.dataset.planBlockDelete;
   if (!id) return;
+  const item = state.dayBlocks.find(entry => entry.id === id);
+  if (item) await cancelAppointmentReminder(item);
   state.dayBlocks = state.dayBlocks.filter(item => item.id !== id);
   saveState();
   renderDayPlan();

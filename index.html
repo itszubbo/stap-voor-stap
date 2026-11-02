@@ -137,6 +137,16 @@
                 <input id="dayBlockEnd" type="time">
               </div>
               <div class="agenda-field">
+                <label for="dayBlockReminder">Herinnering</label>
+                <select id="dayBlockReminder">
+                  <option value="0">Geen herinnering</option>
+                  <option value="5">5 minuten van tevoren</option>
+                  <option value="10">10 minuten van tevoren</option>
+                  <option value="15">15 minuten van tevoren</option>
+                  <option value="30">30 minuten van tevoren</option>
+                </select>
+              </div>
+              <div class="agenda-field">
                 <label for="dayBlockType">Pictogram</label>
                 <select id="dayBlockType">
                   <option value="home">🏠 Thuis</option>
@@ -151,6 +161,7 @@
                 <label for="dayBlockTitle">Wat ga je doen?</label>
                 <input id="dayBlockTitle" type="text" maxlength="70" placeholder="Bijvoorbeeld: ontbijten" required>
               </div>
+              <p class="recurring-reminder-note">Een herinnering krijg je op Android. Kies een begintijd om deze in te stellen.</p>
               <div class="day-block-form-actions">
                 <button class="button button-primary day-block-submit" id="dayBlockSubmit" type="submit">Tijdblok toevoegen</button>
                 <button class="button button-secondary" id="dayBlockCancel" type="button" hidden>Annuleren</button>
