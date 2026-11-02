@@ -1,0 +1,67 @@
+name: Bouw Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Bouw Stap voor Stap voor Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Haal de bestanden op
+        uses: actions/checkout@v4
+
+      - name: Stel Node.js in
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Stel Java in
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Stel Android SDK in
+        uses: android-actions/setup-android@v3
+
+      - name: Installeer Android SDK
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Installeer app-pakketten
+        run: npm install --no-audit --no-fund
+
+      - name: Controleer JavaScript en maak webbestanden
+        run: |
+          node --check app.js
+          node --check scripts/copy-web-assets.mjs
+          npm run build:web
+
+      - name: Maak Android-project
+        run: npx cap add android
+
+      - name: Koppel webapp aan Android
+        run: npx cap sync android
+
+      - name: Bouw installeerbare APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Bewaar APK als download
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stap-voor-Stap-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30

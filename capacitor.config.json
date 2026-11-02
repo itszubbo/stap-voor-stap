@@ -1,0 +1,8 @@
+{
+  "appId": "nl.stapvoorstap.app",
+  "appName": "Stap voor Stap",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

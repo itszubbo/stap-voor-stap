@@ -49,3 +49,28 @@ Open daarna <http://localhost:8000>.
 - `manifest.webmanifest` – instellingen voor installatie als webapp
 - `service-worker.js` – cache voor offline gebruik
 - `icon.svg` – app-icoon
+
+## Android-app bouwen
+
+De repository kan ook een installeerbare Android-app (APK) bouwen met Capacitor 8.
+
+- Bij iedere push naar `main` start GitHub Actions automatisch de workflow **Bouw Android APK**.
+- Open het tabblad **Actions**, kies de nieuwste run van **Bouw Android APK** en download het artifact **Stap-voor-Stap-Android-APK**.
+- Pak het ZIP-bestand uit en open `app-debug.apk` op een Android-telefoon.
+- Android kan vragen om installatie vanuit deze bron toe te staan. Sta dit alleen toe voor het bestand dat je zelf uit deze repository hebt gedownload.
+
+Dit is een debug-/test-APK voor installatie buiten de Play Store. Voor publicatie in Google Play is later een ondertekende release-app (AAB) en een Play Console-account nodig.
+
+### Zelf lokaal bouwen
+
+Installeer Node.js 22 of hoger, Android Studio en de Android SDK. Voer daarna uit:
+
+```bash
+npm install
+npm run build:web
+npx cap add android
+npx cap sync android
+npx cap open android
+```
+
+Open het Android-project in Android Studio om het op een toestel te testen of een releaseversie te maken.
