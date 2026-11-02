@@ -556,7 +556,7 @@ document.getElementById('weekDays').addEventListener('click', async event => {
 // Vaste activiteiten die iedere week terugkomen
 document.getElementById('recurringForm').addEventListener('submit', event => {
   event.preventDefault();
-  const title = document.getElementById('recurringTitle').value.trim();
+  const title = document.getElementById('recurringActivityName').value.trim();
   const time = document.getElementById('recurringTime').value;
   const endTime = document.getElementById('recurringEndTime').value;
   const type = document.getElementById('recurringType').value;
@@ -567,7 +567,7 @@ document.getElementById('recurringForm').addEventListener('submit', event => {
 
   if (!title) {
     showToast('Schrijf op wat je elke week wilt doen.');
-    document.getElementById('recurringTitle').focus();
+    document.getElementById('recurringActivityName').focus();
     return;
   }
   if (!weekdays.length) {
@@ -593,7 +593,7 @@ document.getElementById('recurringForm').addEventListener('submit', event => {
   saveState();
   renderAgenda();
   renderToday();
-  document.getElementById('recurringTitle').value = '';
+  document.getElementById('recurringActivityName').value = '';
   document.getElementById('recurringTime').value = '';
   document.getElementById('recurringEndTime').value = '';
   document.querySelectorAll('input[name="recurringDay"]').forEach(input => { input.checked = false; });
