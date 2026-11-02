@@ -23,6 +23,10 @@ jobs:
     steps:
       - name: Haal de bestanden op
         uses: actions/checkout@v4
+      - name: Controleer JavaScript
+        run: |
+          node --check app.js
+          node --check service-worker.js
       - name: Stel GitHub Pages in
         uses: actions/configure-pages@v5
         with:
