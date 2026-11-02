@@ -7,6 +7,7 @@ Een eerste Nederlandstalige webapp als hulpmiddel voor dagstructuur, taken opdel
 ## Wat zit erin?
 
 - **Vandaag:** takenlijst, zelf taken toevoegen en voortgang zien.
+- **Week & agenda:** afspraken per dag plannen, pictogrammen kiezen, items afvinken en naar een andere week bladeren.
 - **Mijn stappen:** voorbeeldtaken met kleine stappen; eigen taken en stappen toevoegen, afvinken en verwijderen.
 - **Rust & hulp:** eenvoudige pauze-ideeën, een voorbeeldzin om hulp te vragen en een optionele gevoelskeuze.
 - **Instellingen:** tekst groter/kleiner maken en rustige weergave aanzetten.
@@ -28,7 +29,7 @@ Open daarna <http://localhost:8000>.
 1. Maak op GitHub een nieuwe repository aan, bijvoorbeeld `stap-voor-stap`.
 2. Upload alle bestanden uit deze map naar de hoofdmap van de repository.
 3. Open **Settings → Pages**.
-4. Kies bij **Build and deployment** voor **Deploy from a branch**.
+4. Kies bij **Build and deployment** voor **GitHub Actions**.
 5. Kies de branch `main` en map `/(root)`, en sla op.
 6. GitHub Pages toont daarna de website-link bij de Pages-instellingen.
 
