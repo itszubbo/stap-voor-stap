@@ -3,6 +3,7 @@
 const STORAGE_KEY = 'stap-voor-stap-v1';
 const starterState = {
   agenda: [],
+  dayBlocks: [],
   tasks: [
     { id: 'task-1', title: 'Opstaan en aankleden', done: false },
     { id: 'task-2', title: 'Ontbijten', done: false },
@@ -35,6 +36,7 @@ const starterState = {
 
 let state = loadState();
 let toastTimer;
+let selectedPlanDate = toLocalISO(new Date());
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function loadState() {
@@ -48,6 +50,7 @@ function loadState() {
       tasks: Array.isArray(parsed.tasks) ? parsed.tasks : clone(starterState.tasks),
       stepTasks: Array.isArray(parsed.stepTasks) ? parsed.stepTasks : clone(starterState.stepTasks),
       agenda: Array.isArray(parsed.agenda) ? parsed.agenda : [],
+      dayBlocks: Array.isArray(parsed.dayBlocks) ? parsed.dayBlocks : [],
       weekOffset: Number.isInteger(parsed.weekOffset) ? parsed.weekOffset : 0
     };
   } catch (error) {
@@ -151,6 +154,7 @@ function renderToday() {
   document.getElementById('progressFill').style.width = `${percent}%`;
   document.getElementById('progressBar').setAttribute('aria-valuenow', String(percent));
   renderTodayAgenda();
+  renderDayPlan();
 }
 function renderTodayAgenda() {
   const container = document.getElementById('todayAgendaPreview');
@@ -172,6 +176,81 @@ function renderTodayAgenda() {
     </li>`;
   }).join('');
 }
+function getDayPlanEntries(dateISO) {
+  const appointments = state.agenda
+    .filter(item => item.date === dateISO)
+    .map(item => ({ ...item, source: 'agenda', startTime: item.time || '', endTime: '' }));
+  const blocks = state.dayBlocks
+    .filter(item => item.date === dateISO)
+    .map(item => ({ ...item, source: 'block' }));
+  return [...appointments, ...blocks].sort((a, b) => {
+    const timeA = a.startTime || '00:00';
+    const timeB = b.startTime || '00:00';
+    return timeA.localeCompare(timeB) || a.title.localeCompare(b.title, 'nl');
+  });
+}
+function dayPartFor(time) {
+  if (!time) return 'all-day';
+  const hour = Number(time.slice(0, 2));
+  if (hour < 12) return 'morning';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
+}
+function renderDayPlan() {
+  const container = document.getElementById('dayPlanGroups');
+  if (!container) return;
+  const day = new Date(selectedPlanDate + 'T12:00:00');
+  const isToday = selectedPlanDate === toLocalISO(new Date());
+  document.getElementById('planDateTitle').textContent = isToday
+    ? 'Vandaag'
+    : formatAgendaDate(day);
+  document.getElementById('planTodayButton').hidden = isToday;
+
+  const entries = getDayPlanEntries(selectedPlanDate);
+  const groups = [
+    { id: 'all-day', title: 'Geen tijd ingevuld', icon: '📌' },
+    { id: 'morning', title: 'Ochtend', icon: '🌅' },
+    { id: 'afternoon', title: 'Middag', icon: '☀️' },
+    { id: 'evening', title: 'Avond', icon: '🌙' }
+  ];
+  container.innerHTML = groups.map(group => {
+    const items = entries.filter(item => dayPartFor(item.startTime) === group.id);
+    if (!items.length) return '';
+    const cards = items.map(item => {
+      const info = agendaTypeInfo(item.type);
+      const timeLabel = item.startTime
+        ? `${escapeHtml(item.startTime)}${item.endTime ? ' – ' + escapeHtml(item.endTime) : ''}`
+        : 'Hele dag';
+      const isBlock = item.source === 'block';
+      const doneAttribute = isBlock
+        ? `data-plan-block-done="${escapeHtml(item.id)}"`
+        : `data-plan-agenda-done="${escapeHtml(item.id)}"`;
+      return `<li class="day-plan-card ${item.done ? 'done' : ''} ${isBlock ? 'user-block' : 'agenda-block'}">
+        <span class="day-plan-icon" aria-hidden="true">${info.icon}</span>
+        <div class="day-plan-copy">
+          <span class="day-plan-time">${timeLabel}</span>
+          <strong>${escapeHtml(item.title)}</strong>
+          <span class="day-plan-kind">${info.label}${isBlock ? ' · Mijn tijdblok' : ' · Agenda'}</span>
+          ${item.reminderMinutes && !isBlock ? `<span class="reminder-tag">${reminderStatusText(item)}</span>` : ''}
+        </div>
+        <label class="day-plan-done">
+          <input type="checkbox" ${doneAttribute} ${item.done ? 'checked' : ''}>
+          <span>Klaar</span>
+        </label>
+        ${isBlock ? `<button class="agenda-delete" type="button" data-plan-block-delete="${escapeHtml(item.id)}" aria-label="Verwijder tijdblok: ${escapeHtml(item.title)}">×</button>` : ''}
+      </li>`;
+    }).join('');
+    return `<section class="day-plan-part" aria-labelledby="day-part-${group.id}">
+      <h3 id="day-part-${group.id}"><span aria-hidden="true">${group.icon}</span> ${group.title}</h3>
+      <ul class="day-plan-list">${cards}</ul>
+    </section>`;
+  }).join('');
+
+  if (!entries.length) {
+    container.innerHTML = '<p class="day-plan-empty">Er staat nog niets in dit dagrooster. Voeg hieronder een tijdblok toe of plan een afspraak bij Week & agenda.</p>';
+  }
+}
+
 function renderStepChoices() {
   const container = document.getElementById('stepTaskChoices');
   container.innerHTML = state.stepTasks.map(task => {
@@ -387,6 +466,87 @@ document.getElementById('weekDays').addEventListener('click', async event => {
   showToast('De afspraak is verwijderd.');
 });
 
+// Visueel dagrooster
+document.getElementById('previousPlanDay').addEventListener('click', () => {
+  const day = new Date(selectedPlanDate + 'T12:00:00');
+  day.setDate(day.getDate() - 1);
+  selectedPlanDate = toLocalISO(day);
+  renderDayPlan();
+});
+document.getElementById('nextPlanDay').addEventListener('click', () => {
+  const day = new Date(selectedPlanDate + 'T12:00:00');
+  day.setDate(day.getDate() + 1);
+  selectedPlanDate = toLocalISO(day);
+  renderDayPlan();
+});
+document.getElementById('planTodayButton').addEventListener('click', () => {
+  selectedPlanDate = toLocalISO(new Date());
+  renderDayPlan();
+});
+document.getElementById('dayBlockForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const startTime = document.getElementById('dayBlockStart').value;
+  const endTime = document.getElementById('dayBlockEnd').value;
+  const title = document.getElementById('dayBlockTitle').value.trim();
+  const type = document.getElementById('dayBlockType').value;
+  if (!startTime || !title) {
+    showToast('Vul een begintijd en activiteit in.');
+    return;
+  }
+  if (endTime && endTime <= startTime) {
+    showToast('De eindtijd moet na de begintijd zijn.');
+    document.getElementById('dayBlockEnd').focus();
+    return;
+  }
+  state.dayBlocks.push({
+    id: makeId('block'),
+    date: selectedPlanDate,
+    startTime,
+    endTime,
+    title,
+    type,
+    done: false
+  });
+  saveState();
+  renderDayPlan();
+  document.getElementById('dayBlockTitle').value = '';
+  document.getElementById('dayBlockStart').value = '';
+  document.getElementById('dayBlockEnd').value = '';
+  showToast('Je tijdblok staat in het dagrooster.');
+});
+document.getElementById('dayPlanGroups').addEventListener('change', async event => {
+  const agendaId = event.target.dataset.planAgendaDone;
+  const blockId = event.target.dataset.planBlockDone;
+  if (agendaId) {
+    const item = state.agenda.find(entry => entry.id === agendaId);
+    if (!item) return;
+    item.done = event.target.checked;
+    if (item.done) {
+      await cancelAppointmentReminder(item);
+      item.reminderStatus = 'cancelled';
+    } else if (item.reminderMinutes) {
+      await scheduleAppointmentReminder(item);
+    }
+  } else if (blockId) {
+    const item = state.dayBlocks.find(entry => entry.id === blockId);
+    if (!item) return;
+    item.done = event.target.checked;
+  } else {
+    return;
+  }
+  saveState();
+  renderAgenda();
+  renderToday();
+});
+document.getElementById('dayPlanGroups').addEventListener('click', event => {
+  const id = event.target.dataset.planBlockDelete;
+  if (!id) return;
+  state.dayBlocks = state.dayBlocks.filter(item => item.id !== id);
+  saveState();
+  renderDayPlan();
+  showToast('Tijdblok verwijderd.');
+});
+
 // Taken voor vandaag
 document.getElementById('quickAddForm').addEventListener('submit', event => {
   event.preventDefault();
@@ -495,6 +655,26 @@ function makeSpeechText(section) {
       appointments.forEach(item => {
         lines.push(`${item.time ? 'Om ' + item.time : 'De hele dag'}: ${item.title}. ${item.done ? 'Deze afspraak is klaar.' : 'Deze afspraak moet nog komen.'}`);
       });
+    }
+    return lines.join(' ');
+  }
+
+  if (section === 'dayplan') {
+    const day = new Date(selectedPlanDate + 'T12:00:00');
+    const entries = getDayPlanEntries(selectedPlanDate);
+    const lines = [`Het dagrooster voor ${formatAgendaDate(day)}.`];
+    if (!entries.length) lines.push('Er staat nog niets gepland.');
+    entries.forEach(item => {
+      const info = agendaTypeInfo(item.type);
+      const time = item.startTime
+        ? `Om ${item.startTime}${item.endTime ? ' tot ' + item.endTime : ''}`
+        : 'De hele dag';
+      lines.push(`${time}: ${item.title}. ${info.label}. ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
+    });
+    const todayBlocks = state.dayBlocks.filter(item => item.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    if (todayBlocks.length) {
+      lines.push('Je eigen tijdblokken voor vandaag.');
+      todayBlocks.forEach(item => lines.push(`Om ${item.startTime}${item.endTime ? ' tot ' + item.endTime : ''}: ${item.title}. ${item.done ? 'Klaar.' : 'Nog te doen.'}`));
     }
     return lines.join(' ');
   }

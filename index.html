@@ -77,6 +77,55 @@
           </div>
           <ul class="today-agenda-list" id="todayAgendaPreview" aria-label="Afspraken van vandaag"></ul>
         </section>
+
+        <section class="panel day-plan-panel" aria-labelledby="dayPlanTitle">
+          <div class="panel-heading day-plan-header">
+            <div>
+              <p class="eyebrow">MIJN DAG IN BLOKKEN</p>
+              <h2 id="dayPlanTitle">Wat doe ik wanneer?</h2>
+              <p class="muted">Grote blokken geven overzicht. Je mag rustig wisselen.</p>
+            </div>
+          </div>
+          <div class="day-plan-navigation">
+            <button class="button button-secondary" id="previousPlanDay" type="button">← Vorige dag</button>
+            <strong id="planDateTitle">Vandaag</strong>
+            <button class="button button-secondary" id="nextPlanDay" type="button">Volgende dag →</button>
+            <button class="text-button" id="planTodayButton" type="button" hidden>Ga naar vandaag</button>
+          </div>
+          <div class="speech-toolbar">
+            <button class="button button-secondary speech-button" type="button" data-speak="dayplan" aria-pressed="false">🔊 Lees mijn dagrooster voor</button>
+          </div>
+          <div id="dayPlanGroups" class="day-plan-groups" aria-live="polite"></div>
+          <details class="day-block-editor">
+            <summary>+ Voeg zelf een tijdblok toe</summary>
+            <form id="dayBlockForm" class="day-block-form">
+              <div class="agenda-field">
+                <label for="dayBlockStart">Begintijd</label>
+                <input id="dayBlockStart" type="time" required>
+              </div>
+              <div class="agenda-field">
+                <label for="dayBlockEnd">Eindtijd (mag leeg blijven)</label>
+                <input id="dayBlockEnd" type="time">
+              </div>
+              <div class="agenda-field">
+                <label for="dayBlockType">Pictogram</label>
+                <select id="dayBlockType">
+                  <option value="home">🏠 Thuis</option>
+                  <option value="appointment">🩺 Afspraak</option>
+                  <option value="work">💼 Werk of dagbesteding</option>
+                  <option value="care">❤️ Zorg of begeleiding</option>
+                  <option value="fun">🎨 Vrije tijd</option>
+                  <option value="travel">🚌 Reizen</option>
+                </select>
+              </div>
+              <div class="agenda-field day-block-title">
+                <label for="dayBlockTitle">Wat ga je doen?</label>
+                <input id="dayBlockTitle" type="text" maxlength="70" placeholder="Bijvoorbeeld: ontbijten" required>
+              </div>
+              <button class="button button-primary day-block-submit" type="submit">Tijdblok toevoegen</button>
+            </form>
+          </details>
+        </section>
         <div class="two-cards">
           <article class="tip-card soft-blue">
             <div class="card-icon" aria-hidden="true">🧩</div>

@@ -228,3 +228,44 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
 .speech-button { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: normal; }
 .speech-button[aria-pressed="true"] { background: var(--yellow-soft); border-color: #e4d8bd; color: #665638; }
 @media (max-width: 650px) { .speech-toolbar { margin: 12px 0; } .speech-button { width: 100%; } }
+
+
+/* Visueel dagrooster met grote tijdblokken */
+.day-plan-panel { margin-bottom: 20px; }
+.day-plan-header .muted { margin: 7px 0 0; }
+.day-plan-navigation { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin: 17px 0 8px; }
+.day-plan-navigation strong { text-align: center; text-transform: capitalize; }
+.day-plan-navigation button:last-of-type:not([hidden]) { grid-column: 1 / -1; justify-self: center; }
+.day-plan-groups { display: grid; gap: 15px; margin-top: 14px; }
+.day-plan-part { padding: 15px; border-radius: 15px; background: #f6f8f7; }
+.day-plan-part h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 11px; font-size: 1.08rem; }
+.day-plan-part h3 span { font-size: 1.35rem; }
+.day-plan-list { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
+.day-plan-card { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; align-items: center; gap: 13px; min-height: 82px; padding: 13px; border: 1px solid var(--line); border-radius: 14px; background: white; }
+.day-plan-card.done { background: #f5f8f6; }
+.day-plan-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: var(--green-soft); font-size: 1.7rem; }
+.day-plan-copy { display: grid; gap: 2px; min-width: 0; }
+.day-plan-copy strong { font-size: 1.05rem; overflow-wrap: anywhere; }
+.day-plan-card.done .day-plan-copy strong { color: #82908b; text-decoration: line-through; }
+.day-plan-time { color: var(--green-dark); font-size: .9rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.day-plan-kind { color: var(--muted); font-size: .78rem; }
+.day-plan-done { display: flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--muted); font-size: .82rem; }
+.day-plan-done input { width: 23px; height: 23px; accent-color: var(--green); }
+.day-plan-empty { padding: 18px; border-radius: 14px; background: #f6f8f7; color: var(--muted); }
+.day-block-editor { margin-top: 18px; border: 1px solid var(--line); border-radius: 13px; background: #fbfcfb; }
+.day-block-editor summary { padding: 15px 17px; color: var(--green-dark); font-weight: 800; cursor: pointer; }
+.day-block-form { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; padding: 0 17px 17px; }
+.day-block-title, .day-block-submit { grid-column: 1 / -1; }
+.day-block-submit { justify-self: start; }
+@media (max-width: 650px) {
+  .day-plan-navigation { grid-template-columns: 1fr 1fr; }
+  .day-plan-navigation strong { grid-column: 1 / -1; grid-row: 1; padding: 5px 0; }
+  .day-plan-navigation button:first-child { grid-column: 1; grid-row: 2; }
+  .day-plan-navigation button:nth-of-type(2) { grid-column: 2; grid-row: 2; }
+  .day-plan-card { grid-template-columns: 46px minmax(0, 1fr); gap: 10px; }
+  .day-plan-icon { width: 46px; height: 46px; font-size: 1.5rem; }
+  .day-plan-done { grid-column: 2; justify-self: start; }
+  .day-block-form { grid-template-columns: 1fr; }
+  .day-block-title, .day-block-submit { grid-column: auto; }
+  .day-block-submit { width: 100%; }
+}

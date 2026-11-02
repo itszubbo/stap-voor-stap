@@ -8,6 +8,7 @@ Een eerste Nederlandstalige webapp als hulpmiddel voor dagstructuur, taken opdel
 
 - **Vandaag:** takenlijst, zelf taken toevoegen en voortgang zien.
 - **Week & agenda:** afspraken per dag plannen, pictogrammen kiezen, items afvinken en naar een andere week bladeren.
+- **Visueel dagrooster:** afspraken verschijnen automatisch in grote blokken voor ochtend, middag en avond; je kunt ook eigen tijdblokken toevoegen, afvinken en laten voorlezen.
 - **Mijn stappen:** voorbeeldtaken met kleine stappen; eigen taken en stappen toevoegen, afvinken en verwijderen.
 - **Rust & hulp:** eenvoudige pauze-ideeën, een voorbeeldzin om hulp te vragen en een optionele gevoelskeuze.
 - **Instellingen:** tekst groter/kleiner maken en rustige weergave aanzetten.
