@@ -288,6 +288,7 @@ function renderAll() {
   renderDate(); renderToday(); renderStepChoices(); renderSelectedSteps(); renderAgenda(); renderSettings(); renderFeeling();
 }
 function showView(name) {
+  stopSpeech();
   document.querySelectorAll('.view').forEach(view => {
     const active = view.id === `view-${name}`;
     view.hidden = !active;
@@ -465,6 +466,137 @@ document.querySelectorAll('.feeling-option').forEach(button => button.addEventLi
   state.feeling = button.dataset.feeling;
   saveState(); renderFeeling();
 }));
+
+// Voorlezen met de Nederlandse stem van het apparaat of de browser
+let activeSpeechButton = null;
+let speechRun = 0;
+
+function makeSpeechText(section) {
+  if (section === 'today') {
+    const taskCount = state.tasks.length;
+    const doneCount = state.tasks.filter(task => task.done).length;
+    const lines = [
+      document.getElementById('todayTitle').textContent,
+      document.getElementById('todayDate').textContent,
+      `Je hebt ${doneCount} van de ${taskCount} taken gedaan.`
+    ];
+    if (!taskCount) lines.push('Je hebt geen taken voor vandaag.');
+    state.tasks.forEach((task, index) => {
+      lines.push(`Taak ${index + 1}: ${task.title}. ${task.done ? 'Klaar.' : 'Nog te doen.'}`);
+    });
+    const today = toLocalISO(new Date());
+    const appointments = state.agenda
+      .filter(item => item.date === today)
+      .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+    if (!appointments.length) {
+      lines.push('Er staan vandaag geen afspraken in je agenda.');
+    } else {
+      lines.push('Je afspraken voor vandaag.');
+      appointments.forEach(item => {
+        lines.push(`${item.time ? 'Om ' + item.time : 'De hele dag'}: ${item.title}. ${item.done ? 'Deze afspraak is klaar.' : 'Deze afspraak moet nog komen.'}`);
+      });
+    }
+    return lines.join(' ');
+  }
+
+  if (section === 'steps') {
+    const task = getSelectedStepTask();
+    if (!task) return 'Je hebt nog geen taak gekozen.';
+    const lines = [`De taak is: ${task.title}.`];
+    if (!task.steps.length) lines.push('Er zijn nog geen stappen toegevoegd.');
+    task.steps.forEach((step, index) => {
+      lines.push(`Stap ${index + 1}: ${step.text}. ${step.done ? 'Klaar.' : 'Nog te doen.'}`);
+    });
+    return lines.join(' ');
+  }
+
+  if (section === 'agenda') {
+    const start = getWeekStart(state.weekOffset || 0);
+    const lines = ['Dit is jouw weekagenda.'];
+    for (let index = 0; index < 7; index += 1) {
+      const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + index);
+      const dayISO = toLocalISO(day);
+      const items = state.agenda
+        .filter(item => item.date === dayISO)
+        .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+      lines.push(`${formatAgendaDate(day)}.`);
+      if (!items.length) {
+        lines.push('Nog niets gepland.');
+      } else {
+        items.forEach(item => {
+          const info = agendaTypeInfo(item.type);
+          lines.push(`${item.time ? 'Om ' + item.time : 'De hele dag'}: ${item.title}. ${info.label}. ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
+        });
+      }
+    }
+    return lines.join(' ');
+  }
+
+  return '';
+}
+
+function resetSpeechButton(button) {
+  if (!button) return;
+  button.textContent = button.dataset.speechLabel || '🔊 Lees voor';
+  button.setAttribute('aria-pressed', 'false');
+}
+
+function stopSpeech() {
+  speechRun += 1;
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  resetSpeechButton(activeSpeechButton);
+  activeSpeechButton = null;
+}
+
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-speak]');
+  if (!button) return;
+
+  if (activeSpeechButton === button) {
+    stopSpeech();
+    return;
+  }
+
+  stopSpeech();
+  if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance !== 'function') {
+    showToast('Voorlezen is niet beschikbaar op dit apparaat.');
+    return;
+  }
+
+  const text = makeSpeechText(button.dataset.speak);
+  if (!text) {
+    showToast('Er is niets om voor te lezen.');
+    return;
+  }
+
+  const utterance = new window.SpeechSynthesisUtterance(text);
+  utterance.lang = 'nl-NL';
+  utterance.rate = 0.88;
+  const dutchVoice = window.speechSynthesis.getVoices().find(voice => /^nl([_-]|$)/i.test(voice.lang));
+  if (dutchVoice) utterance.voice = dutchVoice;
+
+  const thisRun = ++speechRun;
+  activeSpeechButton = button;
+  button.dataset.speechLabel = button.textContent;
+  button.textContent = '■ Stop voorlezen';
+  button.setAttribute('aria-pressed', 'true');
+
+  utterance.onend = () => {
+    if (thisRun !== speechRun) return;
+    resetSpeechButton(activeSpeechButton);
+    activeSpeechButton = null;
+  };
+  utterance.onerror = event => {
+    if (thisRun !== speechRun) return;
+    resetSpeechButton(activeSpeechButton);
+    activeSpeechButton = null;
+    if (event.error !== 'canceled' && event.error !== 'interrupted') {
+      showToast('Het voorlezen is niet gelukt. Controleer de steminstellingen van je apparaat.');
+    }
+  };
+
+  window.speechSynthesis.speak(utterance);
+});
 
 // Instellingen
 function toggleCalmMode() { state.calmMode = !state.calmMode; saveState(); renderSettings(); }

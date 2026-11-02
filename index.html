@@ -61,6 +61,7 @@
             <div class="progress-copy"><span id="progressText">0 van 3 taken klaar</span><strong id="progressPercent">0%</strong></div>
             <div class="progress-track" role="progressbar" aria-label="Voortgang van vandaag" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar"><span id="progressFill"></span></div>
           </div>
+          <div class="speech-toolbar"><button class="button button-secondary speech-button" type="button" data-speak="today" aria-pressed="false">🔊 Lees mijn dag voor</button></div>
           <ul class="task-list" id="todayTasks" aria-label="Taken voor vandaag"></ul>
           <form class="add-row" id="quickAddForm">
             <label class="sr-only" for="quickTask">Nieuwe taak</label>
@@ -107,6 +108,7 @@
             <p class="eyebrow">STAP VOOR STAP</p>
             <h2 id="selectedTaskTitle">Klaarmaken om weg te gaan</h2>
             <p class="muted" id="selectedTaskHint">Je kunt de stappen rustig afwerken.</p>
+            <div class="speech-toolbar"><button class="button button-secondary speech-button" type="button" data-speak="steps" aria-pressed="false">🔊 Lees deze stappen voor</button></div>
             <ol class="step-list" id="selectedSteps"></ol>
             <form class="add-row step-add" id="addStepForm">
               <label class="sr-only" for="newStep">Nieuwe stap</label>
@@ -126,6 +128,7 @@
         </div>
 
         <section class="panel agenda-panel" aria-label="Weekoverzicht">
+          <div class="speech-toolbar"><button class="button button-secondary speech-button" type="button" data-speak="agenda" aria-pressed="false">🔊 Lees mijn week voor</button></div>
           <div class="week-bar">
             <button class="button button-secondary" id="previousWeek" type="button" aria-label="Vorige week">← Vorige</button>
             <div class="week-heading">
@@ -231,6 +234,7 @@
         <section class="panel settings-panel">
           <div class="setting-row"><div><h2>Grotere letters</h2><p>Maak de tekst groter of kleiner.</p></div><div class="font-controls"><button class="button button-secondary" id="fontDown" type="button" aria-label="Tekst kleiner maken">A−</button><button class="button button-secondary" id="fontUp" type="button" aria-label="Tekst groter maken">A+</button></div></div>
           <div class="setting-row"><div><h2>Rustige weergave</h2><p>Minder kleur en minder versiering.</p></div><button class="switch" id="settingsCalmToggle" type="button" role="switch" aria-checked="false"><span></span><span class="switch-label">Uit</span></button></div>
+          <div class="setting-row"><div><h2>Voorlezen</h2><p>Met de knoppen ‘Lees voor’ kun je jouw dag, stappen en afspraken horen. De app gebruikt de stem die op je telefoon of computer beschikbaar is.</p></div></div>
           <div class="setting-row"><div><h2>Mijn gegevens</h2><p>Je taken en keuzes staan op dit apparaat. Ze worden niet naar een server gestuurd.</p></div><button class="button button-danger-outline" id="resetData" type="button">Wis mijn gegevens</button></div>
         </section>
         <div class="privacy-note"><span aria-hidden="true">🔒</span><p><strong>Jouw privacy</strong><br>Deze eerste versie heeft geen account. De app bewaart gegevens in de browser op dit apparaat. Deel geen wachtwoorden of andere geheime informatie in een taak.</p></div>

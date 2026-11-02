@@ -221,3 +221,10 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
 .reminder-tag { width: fit-content; color: #64746e; font-size: .75rem; }
 .agenda-field select { cursor: pointer; }
 @media (max-width: 650px) { .today-agenda-item { grid-template-columns: 40px 1fr auto; gap: 8px; } .today-agenda-time { grid-column: 2; } .today-agenda-title { grid-column: 2; } .today-agenda-status { grid-column: 3; grid-row: 1 / span 2; } }
+
+
+/* Knoppen om teksten rustig te laten voorlezen */
+.speech-toolbar { display: flex; justify-content: flex-start; margin: 14px 0 8px; }
+.speech-button { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: normal; }
+.speech-button[aria-pressed="true"] { background: var(--yellow-soft); border-color: #e4d8bd; color: #665638; }
+@media (max-width: 650px) { .speech-toolbar { margin: 12px 0; } .speech-button { width: 100%; } }

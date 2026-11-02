@@ -11,6 +11,7 @@ Een eerste Nederlandstalige webapp als hulpmiddel voor dagstructuur, taken opdel
 - **Mijn stappen:** voorbeeldtaken met kleine stappen; eigen taken en stappen toevoegen, afvinken en verwijderen.
 - **Rust & hulp:** eenvoudige pauze-ideeën, een voorbeeldzin om hulp te vragen en een optionele gevoelskeuze.
 - **Instellingen:** tekst groter/kleiner maken en rustige weergave aanzetten.
+- **Voorlezen:** de dagplanning, losse stappen en weekagenda laten uitspreken met de stem van het apparaat of de browser; stoppen kan met dezelfde knop.
 - **Privacy:** geen account, analytics of externe API. Gegevens worden in `localStorage` van de browser op het apparaat opgeslagen.
 - **PWA/offline:** na het eerste bezoek via een webserver kunnen de bestanden gecachet worden en kan de app offline openen.
 
