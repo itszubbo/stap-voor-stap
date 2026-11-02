@@ -656,6 +656,11 @@ function makeSpeechText(section) {
         lines.push(`${item.time ? 'Om ' + item.time : 'De hele dag'}: ${item.title}. ${item.done ? 'Deze afspraak is klaar.' : 'Deze afspraak moet nog komen.'}`);
       });
     }
+    const todayBlocks = state.dayBlocks.filter(item => item.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    if (todayBlocks.length) {
+      lines.push('Je eigen tijdblokken voor vandaag.');
+      todayBlocks.forEach(item => lines.push(`Om ${item.startTime}${item.endTime ? ' tot ' + item.endTime : ''}: ${item.title}. ${item.done ? 'Klaar.' : 'Nog te doen.'}`));
+    }
     return lines.join(' ');
   }
 
@@ -671,11 +676,6 @@ function makeSpeechText(section) {
         : 'De hele dag';
       lines.push(`${time}: ${item.title}. ${info.label}. ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
     });
-    const todayBlocks = state.dayBlocks.filter(item => item.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime));
-    if (todayBlocks.length) {
-      lines.push('Je eigen tijdblokken voor vandaag.');
-      todayBlocks.forEach(item => lines.push(`Om ${item.startTime}${item.endTime ? ' tot ' + item.endTime : ''}: ${item.title}. ${item.done ? 'Klaar.' : 'Nog te doen.'}`));
-    }
     return lines.join(' ');
   }
 
