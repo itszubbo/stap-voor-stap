@@ -33,6 +33,8 @@ jobs:
 
       - name: Stel Android SDK in
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
 
       - name: Installeer Android SDK
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
