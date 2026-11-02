@@ -278,7 +278,7 @@
         <section class="panel add-agenda-panel" aria-labelledby="addAgendaTitle">
           <p class="eyebrow">ZELF PLANNEN</p>
           <h2 id="addAgendaTitle">Voeg een afspraak toe</h2>
-          <p class="muted">Kies een dag en schrijf op wat je gaat doen.</p><p class="small-note">Meldingen werken in de Android-app. Je telefoon kan eerst om toestemming vragen. Ze kunnen soms iets later komen.</p>
+          <p class="muted" id="agendaFormIntro">Kies een dag en schrijf op wat je gaat doen.</p><p class="small-note">Meldingen werken in de Android-app. Je telefoon kan eerst om toestemming vragen. Ze kunnen soms iets later komen.</p>
           <form id="agendaForm" class="agenda-form">
             <div class="agenda-field">
               <label for="agendaDate">Welke dag?</label>
@@ -313,7 +313,10 @@
                 <option value="30">30 minuten van tevoren</option>
               </select>
             </div>
-            <button class="button button-primary agenda-submit" type="submit">+ Zet in mijn agenda</button>
+            <div class="agenda-form-actions">
+              <button class="button button-primary agenda-submit" id="agendaSubmit" type="submit">+ Zet in mijn agenda</button>
+              <button class="button button-secondary" id="agendaCancelEdit" type="button" hidden>Annuleren</button>
+            </div>
           </form>
           <p class="small-note">Je agenda is alleen op dit apparaat opgeslagen.</p>
         </section>

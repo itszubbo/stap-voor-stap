@@ -109,3 +109,11 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - De timer onthoudt de resterende tijd wanneer je de app sluit en later weer opent.
 - In de Android-app kan een lokale melding worden ingesteld wanneer de timer afloopt. Hiervoor is toestemming voor meldingen nodig; Android kan meldingen soms iets later tonen.
 - Op de website loopt de teller zolang de pagina open is. Er is daar geen telefoonmelding.
+
+
+### Afspraken aanpassen
+
+- In de weekagenda staat bij iedere losse afspraak een knop om deze aan te passen.
+- Je kunt de dag, tijd, naam, soort activiteit en herinnering wijzigen.
+- Bij het opslaan wordt de oude herinnering verwijderd en, als je dat kiest, de nieuwe herinnering klaargezet.
+- Vaste activiteiten die iedere week terugkomen beheer je apart bij het onderdeel vaste activiteiten.

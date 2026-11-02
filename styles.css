@@ -332,3 +332,11 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
   .timer-controls .button { width: 100%; min-width: 0; }
   .timer-start { grid-column: 1 / -1; }
 }
+
+
+/* Afspraken aanpassen */
+.agenda-edit { width: 34px; height: 34px; flex: 0 0 auto; border: 0; border-radius: 9px; background: transparent; color: var(--green-dark); font-size: 1.05rem; }
+.agenda-edit:hover { background: var(--green-soft); }
+.agenda-form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.agenda-form-actions .agenda-submit { grid-column: auto; }
+@media (max-width: 650px) { .agenda-form-actions { display: grid; grid-template-columns: 1fr; } .agenda-form-actions .button { width: 100%; } }

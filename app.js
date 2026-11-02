@@ -45,6 +45,7 @@ const starterState = {
 let state = loadState();
 let toastTimer;
 let selectedPlanDate = toLocalISO(new Date());
+let editingAgendaId = null;
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function loadState() {
@@ -558,7 +559,7 @@ function renderAgenda() {
             <input type="checkbox" ${doneInput} ${item.done ? 'checked' : ''}>
             <span>Klaar</span>
           </label>
-          ${isRecurring ? '' : `<button class="agenda-delete" type="button" data-agenda-delete="${escapeHtml(item.id)}" aria-label="Verwijder afspraak: ${escapeHtml(item.title)}">×</button>`}
+          ${isRecurring ? '' : `<button class="agenda-edit" type="button" data-agenda-edit="${escapeHtml(item.id)}" aria-label="Pas afspraak aan: ${escapeHtml(item.title)}" title="Aanpassen">✎</button><button class="agenda-delete" type="button" data-agenda-delete="${escapeHtml(item.id)}" aria-label="Verwijder afspraak: ${escapeHtml(item.title)}" title="Verwijderen">×</button>`}
         </li>`;
     }).join('') : '<li class="agenda-empty">Nog niets gepland.</li>';
     return `
@@ -758,6 +759,39 @@ document.getElementById('currentWeek').addEventListener('click', () => {
   state.weekOffset = 0;
   renderAgenda();
 });
+function setAgendaFormMode(isEditing) {
+  document.getElementById('addAgendaTitle').textContent = isEditing ? 'Afspraak aanpassen' : 'Voeg een afspraak toe';
+  document.getElementById('agendaFormIntro').textContent = isEditing
+    ? 'Pas de dag, tijd of activiteit aan. Je herinnering wordt bijgewerkt.'
+    : 'Kies een dag en schrijf op wat je gaat doen.';
+  document.getElementById('agendaSubmit').textContent = isEditing ? 'Wijzigingen opslaan' : '+ Zet in mijn agenda';
+  document.getElementById('agendaCancelEdit').hidden = !isEditing;
+}
+function resetAgendaForm() {
+  editingAgendaId = null;
+  document.getElementById('agendaForm').reset();
+  document.getElementById('agendaDate').value = toLocalISO(new Date());
+  document.getElementById('agendaReminder').value = '15';
+  setAgendaFormMode(false);
+}
+function beginAgendaEdit(id) {
+  const item = state.agenda.find(entry => entry.id === id);
+  if (!item) return;
+  editingAgendaId = id;
+  document.getElementById('agendaDate').value = item.date;
+  document.getElementById('agendaTime').value = item.time || '';
+  document.getElementById('agendaTitleInput').value = item.title;
+  document.getElementById('agendaType').value = item.type || 'appointment';
+  document.getElementById('agendaReminder').value = String(item.reminderMinutes || 0);
+  setAgendaFormMode(true);
+  document.getElementById('agendaForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('agendaTitleInput').focus({ preventScroll: true });
+}
+
+document.getElementById('agendaCancelEdit').addEventListener('click', () => {
+  resetAgendaForm();
+  showToast('Aanpassen geannuleerd.');
+});
 document.getElementById('agendaForm').addEventListener('submit', async event => {
   event.preventDefault();
   const date = document.getElementById('agendaDate').value;
@@ -774,25 +808,48 @@ document.getElementById('agendaForm').addEventListener('submit', async event => 
     document.getElementById('agendaTime').focus();
     return;
   }
-  const item = { id: makeId('agenda'), date, time, title, type, reminderMinutes, done: false };
-  state.agenda.push(item);
+
+  const isEditing = Boolean(editingAgendaId);
+  let item = isEditing ? state.agenda.find(entry => entry.id === editingAgendaId) : null;
+  if (isEditing && !item) {
+    resetAgendaForm();
+    showToast('Deze afspraak is niet meer gevonden.');
+    return;
+  }
+  if (isEditing) await cancelAppointmentReminder(item);
+  else {
+    item = { id: makeId('agenda'), done: false };
+    state.agenda.push(item);
+  }
+
+  item.date = date;
+  item.time = time;
+  item.title = title;
+  item.type = type;
+  item.reminderMinutes = reminderMinutes;
+  if (!reminderMinutes || item.done) {
+    delete item.reminderStatus;
+    delete item.notificationId;
+  }
+
   const selectedDate = new Date(date + 'T12:00:00');
   const thisMonday = getWeekStart(0);
   const selectedMonday = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - ((selectedDate.getDay() + 6) % 7));
   state.weekOffset = Math.round((selectedMonday - thisMonday) / (7 * 24 * 60 * 60 * 1000));
-  document.getElementById('agendaTitleInput').value = '';
-  document.getElementById('agendaTime').value = '';
+  resetAgendaForm();
   saveState();
   renderAgenda();
   renderToday();
-  if (!reminderMinutes) {
-    showToast('De afspraak staat in je agenda.');
+
+  if (!reminderMinutes || item.done) {
+    showToast(isEditing ? 'Je afspraak is aangepast.' : 'De afspraak staat in je agenda.');
     return;
   }
   const reminderStatus = await scheduleAppointmentReminder(item);
   saveState();
   renderAgenda();
-  if (reminderStatus === 'scheduled') showToast(`Afspraak opgeslagen. Je krijgt ${reminderMinutes} min. vooraf een melding.`);
+  renderToday();
+  if (reminderStatus === 'scheduled') showToast(isEditing ? 'Afspraak aangepast. De nieuwe herinnering staat klaar.' : `Afspraak opgeslagen. Je krijgt ${reminderMinutes} min. vooraf een melding.`);
   else if (reminderStatus === 'website') showToast('Afspraak opgeslagen. Meldingen werken in de Android-app.');
   else if (reminderStatus === 'past') showToast('Afspraak opgeslagen. De gekozen herinneringstijd is al voorbij.');
   else if (reminderStatus === 'denied') showToast('Afspraak opgeslagen. Meldingen staan uit op je telefoon.');
@@ -826,7 +883,12 @@ document.getElementById('weekDays').addEventListener('change', async event => {
   }
 });
 document.getElementById('weekDays').addEventListener('click', async event => {
-  const id = event.target.dataset.agendaDelete;
+  const editId = event.target.closest('[data-agenda-edit]')?.dataset.agendaEdit;
+  if (editId) {
+    beginAgendaEdit(editId);
+    return;
+  }
+  const id = event.target.closest('[data-agenda-delete]')?.dataset.agendaDelete;
   if (!id) return;
   const item = state.agenda.find(entry => entry.id === id);
   if (item) await cancelAppointmentReminder(item);
@@ -1260,6 +1322,7 @@ document.getElementById('resetData').addEventListener('click', () => {
 });
 
 renderAll();
+resetAgendaForm();
 startTimerTicker();
 void refreshRecurringReminders();
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
