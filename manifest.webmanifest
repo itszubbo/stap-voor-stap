@@ -1,0 +1,13 @@
+{
+  "name": "Stap voor Stap",
+  "short_name": "Stap voor Stap",
+  "description": "Een rustige, eenvoudige dagplanner voor meer overzicht en kleine stappen.",
+  "lang": "nl-NL",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f5",
+  "theme_color": "#f3f6f5",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

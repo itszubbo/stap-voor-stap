@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f6f5">
+  <meta name="description" content="Een rustige, eenvoudige dagplanner voor meer overzicht en kleine stappen.">
+  <title>Stap voor Stap</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <a class="skip-link" href="#main">Ga naar de inhoud</a>
+  <header class="topbar">
+    <a class="brand" href="#vandaag" aria-label="Stap voor Stap, naar vandaag">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <span>Stap voor Stap</span>
+    </a>
+    <button class="quiet-toggle" id="calmToggle" type="button" aria-pressed="false">
+      <span aria-hidden="true">◐</span> Rustige weergave
+    </button>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Hoofdnavigatie">
+      <p class="nav-label">MENU</p>
+      <nav class="main-nav">
+        <button class="nav-button active" data-view="vandaag" type="button"><span aria-hidden="true">☀</span> Vandaag</button>
+        <button class="nav-button" data-view="stappen" type="button"><span aria-hidden="true">✓</span> Mijn stappen</button>
+        <button class="nav-button" data-view="rust" type="button"><span aria-hidden="true">♡</span> Rust & hulp</button>
+        <button class="nav-button" data-view="instellingen" type="button"><span aria-hidden="true">⚙</span> Instellingen</button>
+      </nav>
+      <div class="sidebar-note">
+        <span aria-hidden="true">🌱</span>
+        <p>Je hoeft niet alles tegelijk te doen.</p>
+      </div>
+    </aside>
+
+    <main id="main" class="main-content" tabindex="-1">
+      <section class="view active" id="view-vandaag" aria-labelledby="todayTitle">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow" id="todayDate">VANDAAG</p>
+            <h1 id="todayTitle">Goedemorgen!</h1>
+            <p class="intro">Wat fijn dat je er bent. We doen het stap voor stap.</p>
+          </div>
+          <div class="day-illustration" aria-hidden="true">🌤️</div>
+        </div>
+
+        <section class="panel focus-panel" aria-labelledby="focusTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">JOUW DAG</p>
+              <h2 id="focusTitle">Wat ga je vandaag doen?</h2>
+            </div>
+            <span class="date-chip" id="dateChip">Vandaag</span>
+          </div>
+          <div class="progress-area">
+            <div class="progress-copy"><span id="progressText">0 van 3 taken klaar</span><strong id="progressPercent">0%</strong></div>
+            <div class="progress-track" role="progressbar" aria-label="Voortgang van vandaag" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar"><span id="progressFill"></span></div>
+          </div>
+          <ul class="task-list" id="todayTasks" aria-label="Taken voor vandaag"></ul>
+          <form class="add-row" id="quickAddForm">
+            <label class="sr-only" for="quickTask">Nieuwe taak</label>
+            <input id="quickTask" name="task" type="text" maxlength="70" placeholder="Voeg een taak toe..." autocomplete="off">
+            <button class="button button-primary" type="submit">+ Taak toevoegen</button>
+          </form>
+        </section>
+
+        <div class="two-cards">
+          <article class="tip-card soft-blue">
+            <div class="card-icon" aria-hidden="true">🧩</div>
+            <div><h3>Een taak voelt groot?</h3><p>Maak er kleine stappen van. Dat geeft overzicht.</p><button class="text-button" data-go="stappen" type="button">Bekijk mijn stappen <span aria-hidden="true">→</span></button></div>
+          </article>
+          <article class="tip-card soft-green">
+            <div class="card-icon" aria-hidden="true">🍃</div>
+            <div><h3>Even pauze nodig?</h3><p>Neem rustig de tijd. Pauze nemen is goed.</p><button class="text-button" data-go="rust" type="button">Naar rust & hulp <span aria-hidden="true">→</span></button></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-stappen" aria-labelledby="stepsTitle" hidden>
+        <div class="page-heading">
+          <p class="eyebrow">MIJN TAKEN</p>
+          <h1 id="stepsTitle">Kleine stappen helpen</h1>
+          <p class="intro">Kies een taak. Bekijk wat je één voor één kunt doen.</p>
+        </div>
+        <div class="step-layout">
+          <section class="panel" aria-labelledby="chooseTaskTitle">
+            <div class="panel-heading"><div><p class="eyebrow">KIES EEN TAAK</p><h2 id="chooseTaskTitle">Waar wil je mee beginnen?</h2></div></div>
+            <div class="task-choices" id="stepTaskChoices"></div>
+            <form class="new-step-task" id="newStepTaskForm">
+              <label for="newStepTask">Of maak zelf een taak</label>
+              <div class="inline-form"><input id="newStepTask" type="text" maxlength="60" placeholder="Bijvoorbeeld: mijn kamer opruimen"><button class="button button-primary" type="submit">Maken</button></div>
+            </form>
+          </section>
+          <section class="panel step-detail" aria-labelledby="selectedTaskTitle" aria-live="polite">
+            <p class="eyebrow">STAP VOOR STAP</p>
+            <h2 id="selectedTaskTitle">Klaarmaken om weg te gaan</h2>
+            <p class="muted" id="selectedTaskHint">Je kunt de stappen rustig afwerken.</p>
+            <ol class="step-list" id="selectedSteps"></ol>
+            <form class="add-row step-add" id="addStepForm">
+              <label class="sr-only" for="newStep">Nieuwe stap</label>
+              <input id="newStep" type="text" maxlength="80" placeholder="Voeg een stap toe...">
+              <button class="button button-secondary" type="submit">+ Stap</button>
+            </form>
+            <p class="small-note">Je mag een stap overslaan of later verdergaan.</p>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-rust" aria-labelledby="calmTitle" hidden>
+        <div class="page-heading">
+          <p class="eyebrow">NEEM JE TIJD</p>
+          <h1 id="calmTitle">Rust & hulp</h1>
+          <p class="intro">Het is oké om even te stoppen. Kies wat jou nu kan helpen.</p>
+        </div>
+        <div class="calm-grid">
+          <article class="panel calm-card">
+            <div class="large-icon" aria-hidden="true">🌿</div>
+            <h2>Ik wil even rust</h2>
+            <p>Je hoeft nu niets op te lossen.</p>
+            <ul class="calm-list">
+              <li>Zoek een rustige plek.</li>
+              <li>Doe je koptelefoon op als dat fijn is.</li>
+              <li>Neem een slok water.</li>
+              <li>Neem de tijd die je nodig hebt.</li>
+            </ul>
+          </article>
+          <article class="panel calm-card">
+            <div class="large-icon" aria-hidden="true">💬</div>
+            <h2>Ik wil hulp vragen</h2>
+            <p>Je kunt deze zin gebruiken:</p>
+            <blockquote class="help-phrase" id="helpPhrase">“Ik vind dit moeilijk. Kun je mij helpen?”</blockquote>
+            <button class="button button-secondary full-button" id="copyPhrase" type="button">Kopieer deze zin</button>
+            <p class="small-note" id="copyStatus" aria-live="polite"></p>
+          </article>
+          <article class="panel feeling-card">
+            <div class="large-icon" aria-hidden="true">🙂</div>
+            <h2>Hoe voel je je nu?</h2>
+            <p>Je hoeft geen antwoord te geven. Kies wat bij je past.</p>
+            <div class="feeling-options" role="group" aria-label="Hoe voel je je?">
+              <button type="button" class="feeling-option" data-feeling="Rustig" aria-pressed="false"><span aria-hidden="true">🙂</span> Rustig</button>
+              <button type="button" class="feeling-option" data-feeling="Onrustig" aria-pressed="false"><span aria-hidden="true">😟</span> Onrustig</button>
+              <button type="button" class="feeling-option" data-feeling="Moe" aria-pressed="false"><span aria-hidden="true">😴</span> Moe</button>
+              <button type="button" class="feeling-option" data-feeling="Blij" aria-pressed="false"><span aria-hidden="true">😊</span> Blij</button>
+            </div>
+            <p class="small-note" id="feelingStatus" aria-live="polite">Je keuze wordt alleen op dit apparaat bewaard.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-instellingen" aria-labelledby="settingsTitle" hidden>
+        <div class="page-heading">
+          <p class="eyebrow">MAAK HET FIJN VOOR JOU</p>
+          <h1 id="settingsTitle">Instellingen</h1>
+          <p class="intro">Pas de app aan op een manier die prettig voelt.</p>
+        </div>
+        <section class="panel settings-panel">
+          <div class="setting-row"><div><h2>Grotere letters</h2><p>Maak de tekst groter of kleiner.</p></div><div class="font-controls"><button class="button button-secondary" id="fontDown" type="button" aria-label="Tekst kleiner maken">A−</button><button class="button button-secondary" id="fontUp" type="button" aria-label="Tekst groter maken">A+</button></div></div>
+          <div class="setting-row"><div><h2>Rustige weergave</h2><p>Minder kleur en minder versiering.</p></div><button class="switch" id="settingsCalmToggle" type="button" role="switch" aria-checked="false"><span></span><span class="switch-label">Uit</span></button></div>
+          <div class="setting-row"><div><h2>Mijn gegevens</h2><p>Je taken en keuzes staan op dit apparaat. Ze worden niet naar een server gestuurd.</p></div><button class="button button-danger-outline" id="resetData" type="button">Wis mijn gegevens</button></div>
+        </section>
+        <div class="privacy-note"><span aria-hidden="true">🔒</span><p><strong>Jouw privacy</strong><br>Deze eerste versie heeft geen account. De app bewaart gegevens in de browser op dit apparaat. Deel geen wachtwoorden of andere geheime informatie in een taak.</p></div>
+      </section>
+
+      <footer class="footer"><span>Stap voor Stap</span><span>Jouw tempo is goed.</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js" defer></script>
+</body>
+</html>
