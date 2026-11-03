@@ -121,6 +121,19 @@
             <button class="button button-secondary speech-button" type="button" data-speak="dayplan" aria-pressed="false">🔊 Lees mijn dagrooster voor</button>
           </div>
           <div id="dayPlanGroups" class="day-plan-groups" aria-live="polite"></div>
+          <details class="day-copy-editor">
+            <summary>↗ Kopieer dagplanning naar een andere dag</summary>
+            <form id="dayCopyForm" class="day-copy-form">
+              <p>Je afspraken en eigen tijdblokken worden gekopieerd. Vaste activiteiten komen vanzelf terug.</p>
+              <div class="agenda-field">
+                <label for="dayCopyDate">Naar welke dag wil je kopiëren?</label>
+                <input id="dayCopyDate" type="date" required>
+              </div>
+              <div class="day-copy-actions">
+                <button class="button button-primary" type="submit">Kopieer dagplanning</button>
+              </div>
+            </form>
+          </details>
           <details class="day-block-editor">
             <summary id="dayBlockEditorSummary">+ Voeg zelf een tijdblok toe</summary>
             <form id="dayBlockForm" class="day-block-form">

@@ -445,6 +445,9 @@ function renderDayPlan() {
     : formatAgendaDate(day);
   document.getElementById('planTodayButton').hidden = isToday;
   if (!editingDayBlockId) document.getElementById('dayBlockDate').value = selectedPlanDate;
+  const copyTarget = new Date(selectedPlanDate + 'T12:00:00');
+  copyTarget.setDate(copyTarget.getDate() + 1);
+  document.getElementById('dayCopyDate').value = toLocalISO(copyTarget);
 
   const entries = getDayPlanEntries(selectedPlanDate);
   const groups = [
@@ -1166,6 +1169,68 @@ document.getElementById('nextPlanDay').addEventListener('click', () => {
 document.getElementById('planTodayButton').addEventListener('click', () => {
   selectedPlanDate = toLocalISO(new Date());
   renderDayPlan();
+});
+
+document.getElementById('dayCopyForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const targetDate = document.getElementById('dayCopyDate').value;
+  if (!targetDate) {
+    showToast('Kies eerst een dag om naartoe te kopiëren.');
+    return;
+  }
+  if (targetDate === selectedPlanDate) {
+    showToast('Kies een andere dag dan de dag die je kopieert.');
+    document.getElementById('dayCopyDate').focus();
+    return;
+  }
+
+  const appointments = state.agenda.filter(item => item.date === selectedPlanDate);
+  const timeBlocks = state.dayBlocks.filter(item => item.date === selectedPlanDate);
+  const total = appointments.length + timeBlocks.length;
+  if (!total) {
+    showToast('Er staan geen afspraken of eigen tijdblokken om te kopiëren.');
+    return;
+  }
+
+  const alreadyThere = state.agenda.filter(item => item.date === targetDate).length
+    + state.dayBlocks.filter(item => item.date === targetDate).length;
+  if (alreadyThere && !window.confirm(`Er staan al ${alreadyThere} activiteiten op deze dag. Wil je de gekopieerde activiteiten erbij zetten?`)) {
+    return;
+  }
+
+  const copiedAppointments = appointments.map(item => {
+    const copy = { ...item, id: makeId('agenda-copy'), date: targetDate, done: false };
+    delete copy.notificationId;
+    delete copy.reminderStatus;
+    return copy;
+  });
+  const copiedBlocks = timeBlocks.map(item => {
+    const copy = { ...item, id: makeId('block-copy'), date: targetDate, done: false };
+    delete copy.notificationId;
+    delete copy.reminderStatus;
+    return copy;
+  });
+
+  state.agenda.push(...copiedAppointments);
+  state.dayBlocks.push(...copiedBlocks);
+  selectedPlanDate = targetDate;
+  saveState();
+  renderAgenda();
+  renderToday();
+  renderDayPlan();
+
+  let remindersScheduled = 0;
+  for (const item of [...copiedAppointments, ...copiedBlocks]) {
+    if (!item.reminderMinutes) continue;
+    const status = await scheduleAppointmentReminder(item);
+    if (status === 'scheduled') remindersScheduled += 1;
+  }
+  saveState();
+  renderAgenda();
+  renderToday();
+  renderDayPlan();
+  document.getElementById('dayCopyForm').closest('details').open = false;
+  showToast(`${total} activiteiten gekopieerd naar ${formatAgendaDate(new Date(targetDate + 'T12:00:00'))}.${remindersScheduled ? ` ${remindersScheduled} herinneringen staan klaar.` : ''}`);
 });
 
 function setDayBlockFormMode(isEditing) {

@@ -196,3 +196,12 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - Herinneringen voor de activiteit worden tijdens de pauze stopgezet.
 - Met **Hervat** komt de activiteit weer terug op de gekozen weekdagen. Eventuele herinneringen worden opnieuw klaargezet.
 - Eerder afgevinkte dagen blijven bewaard.
+
+
+### Een dagplanning kopiëren
+
+- In het dagrooster kun je de afspraken en eigen tijdblokken van één dag naar een andere datum kopiëren.
+- De namen, tijden, pictogrammen, notities en herinneringskeuzes worden meegenomen.
+- Gekopieerde activiteiten beginnen opnieuw als **niet afgevinkt**.
+- Vaste activiteiten worden niet gekopieerd. Die verschijnen vanzelf op hun gekozen weekdagen.
+- Als er op de andere dag al activiteiten staan, vraagt de app eerst of je de kopieën erbij wilt zetten.

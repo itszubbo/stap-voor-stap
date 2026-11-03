@@ -467,3 +467,13 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
 .recurring-item.is-paused .recurring-icon { filter: grayscale(.65); }
 .recurring-paused-label { color: var(--muted) !important; font-size: .76rem !important; font-weight: 800 !important; }
 @media (max-width: 650px) { .recurring-actions { justify-content: flex-start; } .recurring-toggle { min-height: 40px; } }
+
+
+/* Dagplanning naar een andere dag kopiëren */
+.day-copy-editor { margin: 12px 0 4px; border: 1px solid var(--line); border-radius: 13px; background: #fbfcfb; }
+.day-copy-editor summary { padding: 14px 16px; color: var(--green-dark); font-weight: 800; cursor: pointer; }
+.day-copy-form { display: grid; gap: 12px; padding: 0 16px 16px; }
+.day-copy-form p { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.5; }
+.day-copy-form .agenda-field { max-width: 340px; }
+.day-copy-actions .button { min-height: 44px; }
+@media (max-width: 650px) { .day-copy-form .agenda-field { max-width: none; } .day-copy-actions .button { width: 100%; } }
