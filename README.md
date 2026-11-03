@@ -179,3 +179,11 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - De notitie staat bij de activiteit in de weekagenda, het dagrooster en de dagweergave.
 - De notitie kan ook worden voorgelezen met de voorleesknoppen.
 - Je kunt de notitie later aanpassen. De tekst blijft op dit apparaat opgeslagen en wordt meegenomen in een reservekopie.
+
+
+### Extra informatie bij vaste activiteiten
+
+- Ook een vaste activiteit die iedere week terugkomt kan nu een eigen notitie hebben.
+- De notitie verschijnt in de vaste activiteitenlijst, het dagrooster, de weekagenda en de dagweergave.
+- Je kunt de notitie laten voorlezen. Bij een herinnering op Android wordt de notitie ook in de melding gezet.
+- Bij het aanpassen van de vaste activiteit kun je de notitie veranderen of leegmaken.

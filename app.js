@@ -247,7 +247,7 @@ async function scheduleRecurringOccurrence(activity, dateISO) {
     const result = await window.StapNotifications.schedule({
       id,
       title: 'Je vaste activiteit komt eraan',
-      body: 'Over ' + activity.reminderMinutes + ' minuten: ' + activity.title,
+      body: 'Over ' + activity.reminderMinutes + ' minuten: ' + activity.title + (activity.note ? '. ' + activity.note : ''),
       at: at.toISOString()
     });
     if (result.status === 'scheduled') {
@@ -414,6 +414,7 @@ function renderRecurringActivities() {
         <strong>${escapeHtml(activity.title)}</strong>
         <span>${escapeHtml(recurringWeekdayNames(activity.weekdays))}</span>
         <small>${time} · ${info.label}</small>
+        ${activity.note ? `<span class="recurring-note">${escapeHtml(activity.note)}</span>` : ''}
         ${activity.reminderMinutes ? `<span class="recurring-reminder">${escapeHtml(recurringReminderText(activity))}</span>` : ''}
         ${activity.reminderMinutes && window.StapNotifications?.isNative && activity.reminderStatus !== 'scheduled' && activity.reminderStatus !== 'done' ? `<button class="text-button recurring-reminder-action" type="button" data-recurring-reminder-enable="${escapeHtml(activity.id)}">Meldingen instellen</button>` : ''}
       </div>
@@ -968,6 +969,7 @@ function beginRecurringEdit(id) {
   if (!activity) return;
   editingRecurringId = id;
   document.getElementById('recurringActivityName').value = activity.title || '';
+  document.getElementById('recurringNote').value = activity.note || '';
   document.getElementById('recurringTime').value = activity.time || '';
   document.getElementById('recurringEndTime').value = activity.endTime || '';
   document.getElementById('recurringReminder').value = String(activity.reminderMinutes || 0);
@@ -994,6 +996,7 @@ function removeCompletionsForRemovedWeekdays(activityId, weekdays) {
 document.getElementById('recurringForm').addEventListener('submit', async event => {
   event.preventDefault();
   const title = document.getElementById('recurringActivityName').value.trim();
+  const note = document.getElementById('recurringNote').value.trim();
   const time = document.getElementById('recurringTime').value;
   const endTime = document.getElementById('recurringEndTime').value;
   const reminderMinutes = Number(document.getElementById('recurringReminder').value || 0);
@@ -1036,6 +1039,7 @@ document.getElementById('recurringForm').addEventListener('submit', async event 
   if (isEditing) {
     await cancelRecurringReminders(activity);
     activity.title = title;
+    activity.note = note;
     activity.time = time;
     activity.endTime = endTime;
     activity.reminderMinutes = reminderMinutes;
@@ -1047,6 +1051,7 @@ document.getElementById('recurringForm').addEventListener('submit', async event 
     activity = {
       id: makeId('repeat'),
       title,
+      note,
       time,
       endTime,
       reminderMinutes,
