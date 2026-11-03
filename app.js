@@ -451,6 +451,17 @@ function renderDayPlan() {
   document.getElementById('dayCopyDate').value = toLocalISO(copyTarget);
 
   const entries = getDayPlanEntries(selectedPlanDate);
+  const doneCount = entries.filter(item => item.done).length;
+  const totalCount = entries.length;
+  const progressPercent = totalCount ? Math.round(doneCount / totalCount * 100) : 0;
+  const progressText = totalCount
+    ? `${doneCount} van ${totalCount} activiteiten klaar`
+    : 'Nog geen activiteiten gepland';
+  document.getElementById('dayPlanProgressText').textContent = progressText;
+  document.getElementById('dayPlanProgressPercent').textContent = `${progressPercent}%`;
+  document.getElementById('dayPlanProgressBar').setAttribute('aria-valuenow', String(progressPercent));
+  document.getElementById('dayPlanProgressBar').setAttribute('aria-valuetext', progressText);
+  document.getElementById('dayPlanProgressFill').style.width = `${progressPercent}%`;
   const groups = [
     { id: 'all-day', title: 'Geen tijd ingevuld', icon: '📌' },
     { id: 'morning', title: 'Ochtend', icon: '🌅' },

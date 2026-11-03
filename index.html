@@ -125,6 +125,15 @@
           <div class="speech-toolbar">
             <button class="button button-secondary speech-button" type="button" data-speak="dayplan" aria-pressed="false">🔊 Lees mijn dagrooster voor</button>
           </div>
+          <div class="day-plan-progress" aria-live="polite">
+            <div class="day-plan-progress-heading">
+              <strong id="dayPlanProgressText">Nog geen activiteiten gepland</strong>
+              <span id="dayPlanProgressPercent">0%</span>
+            </div>
+            <div class="day-plan-progress-bar" id="dayPlanProgressBar" role="progressbar" aria-label="Voortgang van deze dag" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Nog geen activiteiten gepland">
+              <span id="dayPlanProgressFill"></span>
+            </div>
+          </div>
           <div id="dayPlanGroups" class="day-plan-groups" aria-live="polite"></div>
           <details class="day-copy-editor">
             <summary>↗ Kopieer dagplanning naar een andere dag</summary>

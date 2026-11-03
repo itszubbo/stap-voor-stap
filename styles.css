@@ -490,3 +490,12 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
 .day-plan-date-picker input { min-height: 44px; min-width: 180px; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 8px 11px; color: var(--ink); font: inherit; }
 .day-plan-date-picker input:focus-visible { outline: 3px solid var(--green-soft); outline-offset: 2px; }
 @media (max-width: 560px) { .day-plan-date-picker { align-items: stretch; flex-direction: column; } .day-plan-date-picker input { width: 100%; } }
+
+
+/* Voortgang van het dagrooster */
+.day-plan-progress { margin: 14px 0 8px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfb; }
+.day-plan-progress-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 8px; color: var(--ink); font-size: .88rem; }
+.day-plan-progress-heading span { color: var(--green-dark); font-weight: 800; font-variant-numeric: tabular-nums; }
+.day-plan-progress-bar { height: 11px; overflow: hidden; border-radius: 999px; background: #e8efeb; }
+.day-plan-progress-bar > span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--green); transition: width .2s ease; }
+@media (prefers-reduced-motion: reduce) { .day-plan-progress-bar > span { transition: none; } }

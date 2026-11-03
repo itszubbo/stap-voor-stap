@@ -220,3 +220,11 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - Boven het dagrooster kun je nu direct een datum kiezen.
 - Het rooster springt meteen naar de gekozen dag.
 - De knoppen **Vorige dag**, **Volgende dag** en **Ga naar vandaag** blijven ook werken.
+
+
+### Voortgang van je dagrooster
+
+- Boven het dagrooster zie je hoeveel activiteiten klaar zijn.
+- De voortgang telt afspraken, vaste activiteiten en eigen tijdblokken mee.
+- Het percentage en de balk veranderen vanzelf wanneer je iets afvinkt.
+- Op een lege dag staat er dat er nog niets gepland is.
