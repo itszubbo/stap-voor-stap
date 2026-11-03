@@ -477,3 +477,8 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
 .day-copy-form .agenda-field { max-width: 340px; }
 .day-copy-actions .button { min-height: 44px; }
 @media (max-width: 650px) { .day-copy-form .agenda-field { max-width: none; } .day-copy-actions .button { width: 100%; } }
+
+
+/* Afspraken aanpassen vanuit het dagrooster */
+.day-plan-actions .agenda-edit { min-width: 36px; min-height: 36px; }
+@media (max-width: 650px) { .day-plan-actions .agenda-edit { width: 40px; height: 40px; } }

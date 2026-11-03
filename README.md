@@ -205,3 +205,11 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - Gekopieerde activiteiten beginnen opnieuw als **niet afgevinkt**.
 - Vaste activiteiten worden niet gekopieerd. Die verschijnen vanzelf op hun gekozen weekdagen.
 - Als er op de andere dag al activiteiten staan, vraagt de app eerst of je de kopieën erbij wilt zetten.
+
+
+### Afspraken aanpassen vanuit het dagrooster
+
+- Bij een losse afspraak in het dagrooster staat nu ook een potloodknop.
+- Met deze knop ga je direct naar het formulier van de weekagenda om de afspraak aan te passen.
+- Je kunt de datum, tijd, naam, extra informatie, soort activiteit en herinnering wijzigen.
+- Vaste activiteiten en eigen tijdblokken houden hun eigen bewerkknop.

@@ -485,7 +485,7 @@ function renderDayPlan() {
             <input type="checkbox" ${doneAttribute} ${item.done ? 'checked' : ''}>
             <span>Klaar</span>
           </label>
-          ${isBlock ? `<button class="agenda-edit" type="button" data-plan-block-edit="${escapeHtml(item.id)}" aria-label="Pas tijdblok aan: ${escapeHtml(item.title)}" title="Aanpassen">✎</button><button class="agenda-delete" type="button" data-plan-block-delete="${escapeHtml(item.id)}" aria-label="Verwijder tijdblok: ${escapeHtml(item.title)}" title="Verwijderen">×</button>` : ''}
+          ${isBlock ? `<button class="agenda-edit" type="button" data-plan-block-edit="${escapeHtml(item.id)}" aria-label="Pas tijdblok aan: ${escapeHtml(item.title)}" title="Aanpassen">✎</button><button class="agenda-delete" type="button" data-plan-block-delete="${escapeHtml(item.id)}" aria-label="Verwijder tijdblok: ${escapeHtml(item.title)}" title="Verwijderen">×</button>` : !isRecurring ? `<button class="agenda-edit" type="button" data-plan-agenda-edit="${escapeHtml(item.id)}" aria-label="Pas afspraak aan: ${escapeHtml(item.title)}" title="Aanpassen">✎</button>` : ''}
         </div>
       </li>`;
     }).join('');
@@ -1373,6 +1373,12 @@ document.getElementById('dayPlanGroups').addEventListener('change', async event 
   renderToday();
 });
 document.getElementById('dayPlanGroups').addEventListener('click', async event => {
+  const agendaEditId = event.target.closest('[data-plan-agenda-edit]')?.dataset.planAgendaEdit;
+  if (agendaEditId) {
+    showView('agenda');
+    beginAgendaEdit(agendaEditId);
+    return;
+  }
   const editId = event.target.closest('[data-plan-block-edit]')?.dataset.planBlockEdit;
   if (editId) {
     beginDayBlockEdit(editId);
