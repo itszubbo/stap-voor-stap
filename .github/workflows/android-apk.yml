@@ -16,6 +16,7 @@ jobs:
   build:
     name: Bouw Stap voor Stap voor Android
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Haal de bestanden op
         uses: actions/checkout@v4
@@ -56,10 +57,11 @@ jobs:
         run: npx cap sync android
 
       - name: Bouw installeerbare APK
+        timeout-minutes: 12
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --console=plain --stacktrace
 
       - name: Bewaar APK als download
         uses: actions/upload-artifact@v4
