@@ -117,6 +117,11 @@
             <button class="button button-secondary" id="nextPlanDay" type="button">Volgende dag →</button>
             <button class="text-button" id="planTodayButton" type="button" hidden>Ga naar vandaag</button>
           </div>
+          <div class="day-plan-date-picker">
+            <label for="planDatePicker">Of kies een datum</label>
+            <input id="planDatePicker" type="date" aria-describedby="planDateHelp">
+            <span id="planDateHelp" class="sr-only">Kies een datum om het dagrooster van die dag te bekijken.</span>
+          </div>
           <div class="speech-toolbar">
             <button class="button button-secondary speech-button" type="button" data-speak="dayplan" aria-pressed="false">🔊 Lees mijn dagrooster voor</button>
           </div>

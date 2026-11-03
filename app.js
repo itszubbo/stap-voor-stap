@@ -440,6 +440,7 @@ function renderDayPlan() {
   if (!container) return;
   const day = new Date(selectedPlanDate + 'T12:00:00');
   const isToday = selectedPlanDate === toLocalISO(new Date());
+  document.getElementById('planDatePicker').value = selectedPlanDate;
   document.getElementById('planDateTitle').textContent = isToday
     ? 'Vandaag'
     : formatAgendaDate(day);
@@ -1168,6 +1169,12 @@ document.getElementById('nextPlanDay').addEventListener('click', () => {
 });
 document.getElementById('planTodayButton').addEventListener('click', () => {
   selectedPlanDate = toLocalISO(new Date());
+  renderDayPlan();
+});
+document.getElementById('planDatePicker').addEventListener('change', event => {
+  const chosenDate = event.target.value;
+  if (!chosenDate) return;
+  selectedPlanDate = chosenDate;
   renderDayPlan();
 });
 

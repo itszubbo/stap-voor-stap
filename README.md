@@ -213,3 +213,10 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - Met deze knop ga je direct naar het formulier van de weekagenda om de afspraak aan te passen.
 - Je kunt de datum, tijd, naam, extra informatie, soort activiteit en herinnering wijzigen.
 - Vaste activiteiten en eigen tijdblokken houden hun eigen bewerkknop.
+
+
+### Meteen naar een datum in het dagrooster
+
+- Boven het dagrooster kun je nu direct een datum kiezen.
+- Het rooster springt meteen naar de gekozen dag.
+- De knoppen **Vorige dag**, **Volgende dag** en **Ga naar vandaag** blijven ook werken.
