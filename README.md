@@ -187,3 +187,12 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - De notitie verschijnt in de vaste activiteitenlijst, het dagrooster, de weekagenda en de dagweergave.
 - Je kunt de notitie laten voorlezen. Bij een herinnering op Android wordt de notitie ook in de melding gezet.
 - Bij het aanpassen van de vaste activiteit kun je de notitie veranderen of leegmaken.
+
+
+### Vaste activiteiten pauzeren
+
+- Je kunt een vaste activiteit tijdelijk pauzeren zonder deze te verwijderen.
+- Een gepauzeerde activiteit verschijnt niet in je weekagenda of dagrooster.
+- Herinneringen voor de activiteit worden tijdens de pauze stopgezet.
+- Met **Hervat** komt de activiteit weer terug op de gekozen weekdagen. Eventuele herinneringen worden opnieuw klaargezet.
+- Eerder afgevinkte dagen blijven bewaard.

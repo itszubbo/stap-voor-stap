@@ -457,3 +457,13 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
 .recurring-note { display: block; color: #52645e; font-size: .82rem; line-height: 1.4; overflow-wrap: anywhere; }
 .recurring-note-field { grid-column: 1 / -1; }
 @media (max-width: 650px) { .recurring-note-field { grid-column: auto; } }
+
+
+/* Vaste activiteiten tijdelijk pauzeren */
+.recurring-actions { flex-wrap: wrap; justify-content: flex-end; }
+.recurring-toggle { min-height: 36px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 9px; background: #f7faf8; color: var(--green-dark); font: inherit; font-size: .76rem; font-weight: 800; cursor: pointer; }
+.recurring-toggle:hover { background: var(--green-soft); }
+.recurring-item.is-paused { border-style: dashed; background: #fafbfa; }
+.recurring-item.is-paused .recurring-icon { filter: grayscale(.65); }
+.recurring-paused-label { color: var(--muted) !important; font-size: .76rem !important; font-weight: 800 !important; }
+@media (max-width: 650px) { .recurring-actions { justify-content: flex-start; } .recurring-toggle { min-height: 40px; } }

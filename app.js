@@ -405,20 +405,23 @@ function renderRecurringActivities() {
   }
   container.innerHTML = state.recurringActivities.map(activity => {
     const info = agendaTypeInfo(activity.type);
+    const isPaused = activity.active === false;
     const time = activity.time
       ? `${escapeHtml(activity.time)}${activity.endTime ? ' – ' + escapeHtml(activity.endTime) : ''}`
       : 'Geen vaste tijd';
-    return `<li class="recurring-item">
+    return `<li class="recurring-item ${isPaused ? 'is-paused' : ''}">
       <span class="recurring-icon" aria-hidden="true">${info.icon}</span>
       <div class="recurring-copy">
         <strong>${escapeHtml(activity.title)}</strong>
         <span>${escapeHtml(recurringWeekdayNames(activity.weekdays))}</span>
         <small>${time} · ${info.label}</small>
+        ${isPaused ? '<span class="recurring-paused-label">Gepauzeerd</span>' : ''}
         ${activity.note ? `<span class="recurring-note">${escapeHtml(activity.note)}</span>` : ''}
-        ${activity.reminderMinutes ? `<span class="recurring-reminder">${escapeHtml(recurringReminderText(activity))}</span>` : ''}
-        ${activity.reminderMinutes && window.StapNotifications?.isNative && activity.reminderStatus !== 'scheduled' && activity.reminderStatus !== 'done' ? `<button class="text-button recurring-reminder-action" type="button" data-recurring-reminder-enable="${escapeHtml(activity.id)}">Meldingen instellen</button>` : ''}
+        ${activity.reminderMinutes ? `<span class="recurring-reminder">${escapeHtml(isPaused ? 'Herinneringen gepauzeerd' : recurringReminderText(activity))}</span>` : ''}
+        ${!isPaused && activity.reminderMinutes && window.StapNotifications?.isNative && activity.reminderStatus !== 'scheduled' && activity.reminderStatus !== 'done' ? `<button class="text-button recurring-reminder-action" type="button" data-recurring-reminder-enable="${escapeHtml(activity.id)}">Meldingen instellen</button>` : ''}
       </div>
       <div class="recurring-actions">
+        <button class="recurring-toggle" type="button" data-recurring-toggle="${escapeHtml(activity.id)}" aria-label="${isPaused ? 'Hervat' : 'Pauzeer'} vaste activiteit: ${escapeHtml(activity.title)}">${isPaused ? 'Hervat' : 'Pauzeer'}</button>
         <button class="agenda-edit" type="button" data-recurring-edit="${escapeHtml(activity.id)}" aria-label="Pas vaste activiteit aan: ${escapeHtml(activity.title)}" title="Aanpassen">✎</button>
         <button class="agenda-delete" type="button" data-recurring-delete="${escapeHtml(activity.id)}" aria-label="Verwijder vaste activiteit: ${escapeHtml(activity.title)}" title="Verwijderen">×</button>
       </div>
@@ -1069,7 +1072,7 @@ document.getElementById('recurringForm').addEventListener('submit', async event 
   renderAgenda();
   renderToday();
 
-  if (reminderMinutes) {
+  if (reminderMinutes && activity.active !== false) {
     const status = await scheduleRecurringReminders(activity, true);
     saveState();
     renderAgenda();
@@ -1079,7 +1082,10 @@ document.getElementById('recurringForm').addEventListener('submit', async event 
     else if (status === 'done') showToast('De vaste activiteit is aangepast. Alle komende momenten zijn al afgevinkt.');
     else showToast('Vaste activiteit opgeslagen. De herinnering kon niet worden ingesteld.');
   } else {
-    showToast(isEditing ? 'Je vaste activiteit is aangepast.' : 'Je vaste activiteit is opgeslagen.');
+    if (reminderMinutes && activity.active === false) activity.reminderStatus = 'paused';
+    showToast(activity.active === false
+      ? 'De vaste activiteit is aangepast en blijft op pauze.'
+      : (isEditing ? 'Je vaste activiteit is aangepast.' : 'Je vaste activiteit is opgeslagen.'));
   }
 });
 document.getElementById('recurringCancelEdit').addEventListener('click', () => {
@@ -1090,6 +1096,32 @@ document.getElementById('recurringActivityList').addEventListener('click', async
   const editId = event.target.closest('[data-recurring-edit]')?.dataset.recurringEdit;
   if (editId) {
     beginRecurringEdit(editId);
+    return;
+  }
+  const toggleId = event.target.closest('[data-recurring-toggle]')?.dataset.recurringToggle;
+  if (toggleId) {
+    const activity = state.recurringActivities.find(item => item.id === toggleId);
+    if (!activity) return;
+    if (activity.active === false) {
+      activity.active = true;
+      const status = activity.reminderMinutes
+        ? await scheduleRecurringReminders(activity, true)
+        : 'none';
+      saveState();
+      renderAgenda();
+      renderToday();
+      if (status === 'scheduled') showToast('De vaste activiteit is hervat. Herinneringen staan klaar.');
+      else if (status === 'denied') showToast('De activiteit is hervat. Meldingen staan nog uit.');
+      else showToast('De vaste activiteit is hervat.');
+    } else {
+      activity.active = false;
+      await cancelRecurringReminders(activity);
+      activity.reminderStatus = activity.reminderMinutes ? 'paused' : '';
+      saveState();
+      renderAgenda();
+      renderToday();
+      showToast('De vaste activiteit staat op pauze.');
+    }
     return;
   }
   const enableId = event.target.closest('[data-recurring-reminder-enable]')?.dataset.recurringReminderEnable;
