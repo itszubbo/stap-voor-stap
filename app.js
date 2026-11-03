@@ -106,12 +106,13 @@ async function cancelAppointmentReminder(item) {
   delete item.notificationId;
 }
 async function scheduleAppointmentReminder(item) {
-  if (!item.reminderMinutes || !item.time) return 'none';
+  const activityTime = item.time || item.startTime;
+  if (!item.reminderMinutes || !activityTime) return 'none';
   if (!window.StapNotifications?.isNative) {
     item.reminderStatus = 'website';
     return 'website';
   }
-  const at = new Date(`${item.date}T${item.time}:00`);
+  const at = new Date(`${item.date}T${activityTime}:00`);
   at.setMinutes(at.getMinutes() - Number(item.reminderMinutes));
   if (Number.isNaN(at.getTime()) || at <= new Date()) {
     item.reminderStatus = 'past';
@@ -1503,6 +1504,169 @@ document.addEventListener('click', event => {
   window.speechSynthesis.speak(utterance);
 });
 
+
+/* Reservekopieën van persoonlijke gegevens */
+function isPlainRecord(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+function normalizeBackupState(data) {
+  if (!isPlainRecord(data)) throw new Error('Dit bestand bevat geen geldige planning.');
+  const arrayKeys = ['tasks', 'stepTasks', 'agenda', 'dayBlocks', 'recurringActivities', 'recurringCompletions'];
+  if (arrayKeys.some(key => !Array.isArray(data[key]))) {
+    throw new Error('Dit bestand is geen reservekopie van Stap voor Stap.');
+  }
+  const recordKeys = ['tasks', 'stepTasks', 'agenda', 'dayBlocks', 'recurringActivities'];
+  if (recordKeys.some(key => !data[key].every(isPlainRecord))) {
+    throw new Error('Er staan gegevens in het bestand die niet gelezen kunnen worden.');
+  }
+  if (!data.tasks.every(item => typeof item.id === 'string' && typeof item.title === 'string')) {
+    throw new Error('Een taak in de reservekopie is niet volledig.');
+  }
+  if (!data.stepTasks.every(task => typeof task.id === 'string' && typeof task.title === 'string'
+    && Array.isArray(task.steps) && task.steps.every(step => isPlainRecord(step)
+      && typeof step.id === 'string' && typeof step.text === 'string'))) {
+    throw new Error('Een stappenplan in de reservekopie is niet volledig.');
+  }
+  if (!data.agenda.every(item => typeof item.id === 'string' && typeof item.date === 'string' && typeof item.title === 'string')
+    || !data.dayBlocks.every(item => typeof item.id === 'string' && typeof item.date === 'string'
+      && typeof item.startTime === 'string' && typeof item.title === 'string')) {
+    throw new Error('Een afspraak of tijdblok in de reservekopie is niet volledig.');
+  }
+  if (!data.recurringActivities.every(item => typeof item.id === 'string' && typeof item.title === 'string'
+    && Array.isArray(item.weekdays) && item.weekdays.every(day => Number.isInteger(day) && day >= 1 && day <= 7))
+    || !data.recurringCompletions.every(key => typeof key === 'string')) {
+    throw new Error('Een vaste activiteit in de reservekopie is niet volledig.');
+  }
+  if (data.timer !== undefined && !isPlainRecord(data.timer)) throw new Error('De timer in de reservekopie kan niet worden gelezen.');
+
+  const sourceTimer = isPlainRecord(data.timer) ? data.timer : starterState.timer;
+  const restored = {
+    ...clone(starterState),
+    ...data,
+    tasks: clone(data.tasks),
+    stepTasks: clone(data.stepTasks),
+    agenda: clone(data.agenda),
+    dayBlocks: clone(data.dayBlocks),
+    recurringActivities: clone(data.recurringActivities),
+    recurringCompletions: [...data.recurringCompletions],
+    calmMode: Boolean(data.calmMode),
+    fontScale: Number.isFinite(data.fontScale) ? Math.max(.9, Math.min(1.35, data.fontScale)) : 1,
+    feeling: typeof data.feeling === 'string' ? data.feeling : '',
+    selectedStepTask: typeof data.selectedStepTask === 'string' ? data.selectedStepTask : starterState.selectedStepTask,
+    timer: {
+      durationSeconds: [300, 600, 900, 1800].includes(sourceTimer.durationSeconds) ? sourceTimer.durationSeconds : 300,
+      remainingSeconds: Number.isFinite(sourceTimer.remainingSeconds)
+        ? Math.max(0, Math.min(1800, Math.ceil(sourceTimer.remainingSeconds)))
+        : 300,
+      endsAt: Number.isFinite(sourceTimer.endsAt) ? sourceTimer.endsAt : null,
+      status: ['idle', 'running', 'paused', 'completed'].includes(sourceTimer.status) ? sourceTimer.status : 'idle'
+    },
+    weekOffset: Number.isInteger(data.weekOffset) ? data.weekOffset : 0
+  };
+  if (restored.stepTasks.length && !restored.stepTasks.some(task => task.id === restored.selectedStepTask)) {
+    restored.selectedStepTask = restored.stepTasks[0].id;
+  }
+  return restored;
+}
+function makeBackupPayload() {
+  const backupState = clone(state);
+  [...backupState.agenda, ...backupState.dayBlocks].forEach(item => {
+    delete item.notificationId;
+    delete item.reminderStatus;
+  });
+  backupState.recurringActivities.forEach(activity => {
+    delete activity.notificationIds;
+    delete activity.reminderStatus;
+  });
+  return {
+    app: 'stap-voor-stap',
+    schemaVersion: 1,
+    createdAt: new Date().toISOString(),
+    data: backupState
+  };
+}
+function getBackupFileName() {
+  return 'Stap-voor-Stap-reservekopie-' + toLocalISO(new Date()) + '.json';
+}
+async function exportBackup() {
+  const fileName = getBackupFileName();
+  const contents = JSON.stringify(makeBackupPayload(), null, 2);
+  if (window.StapBackup?.isNative) {
+    await window.StapBackup.shareBackup(fileName, contents);
+    showToast('Kies een plek om je reservekopie te bewaren.');
+    return;
+  }
+  const file = new Blob([contents], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+  showToast('Je reservekopie wordt gedownload.');
+}
+function readBackupFile(file) {
+  if (typeof file.text === 'function') return file.text();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Het bestand kon niet worden gelezen.'));
+    reader.readAsText(file);
+  });
+}
+async function cancelCurrentNotifications() {
+  for (const item of [...state.agenda, ...state.dayBlocks]) await cancelAppointmentReminder(item);
+  for (const activity of state.recurringActivities) await cancelRecurringReminders(activity);
+  await cancelTimerNotification();
+}
+async function restoreBackupFile(file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) throw new Error('Het bestand is te groot om als reservekopie te gebruiken.');
+  let payload;
+  try { payload = JSON.parse(await readBackupFile(file)); }
+  catch (error) {
+    if (error instanceof SyntaxError) throw new Error('Dit bestand is geen geldige reservekopie.');
+    throw error;
+  }
+  if (!isPlainRecord(payload) || payload.app !== 'stap-voor-stap' || payload.schemaVersion !== 1) {
+    throw new Error('Dit bestand hoort niet bij deze versie van Stap voor Stap.');
+  }
+  const restoredState = normalizeBackupState(payload.data);
+  const confirmed = window.confirm('Wil je je huidige planning vervangen door deze reservekopie? Dit kan niet ongedaan worden gemaakt.');
+  if (!confirmed) return;
+
+  await cancelCurrentNotifications();
+  state = restoredState;
+  [...state.agenda, ...state.dayBlocks].forEach(item => {
+    delete item.notificationId;
+    delete item.reminderStatus;
+  });
+  state.recurringActivities.forEach(activity => {
+    activity.notificationIds = [];
+    delete activity.reminderStatus;
+  });
+  for (const item of [...state.agenda, ...state.dayBlocks]) {
+    if (item.reminderMinutes && !item.done) await scheduleAppointmentReminder(item);
+  }
+  state.recurringActivities.forEach(activity => {
+    if (activity.reminderMinutes && activity.time) activity.reminderStatus = window.StapNotifications?.isNative ? 'denied' : 'website';
+  });
+
+  saveState();
+  renderAll();
+  resetAgendaForm();
+  resetDayBlockForm();
+  startTimerTicker();
+  if (state.timer.status === 'running') await scheduleTimerNotification();
+  await refreshRecurringReminders();
+  saveState();
+  showView('vandaag');
+  showToast('Je reservekopie is teruggezet.');
+}
+
 // Instellingen
 function toggleCalmMode() { state.calmMode = !state.calmMode; saveState(); renderSettings(); }
 document.getElementById('calmToggle').addEventListener('click', toggleCalmMode);
@@ -1512,6 +1676,27 @@ document.getElementById('fontUp').addEventListener('click', () => {
 });
 document.getElementById('fontDown').addEventListener('click', () => {
   state.fontScale = Math.max(.9, Math.round((state.fontScale - .1) * 100) / 100); saveState(); renderSettings();
+});
+document.getElementById('exportBackup').addEventListener('click', async () => {
+  try { await exportBackup(); }
+  catch (error) {
+    console.warn('De reservekopie kon niet worden gemaakt.', error);
+    showToast('De reservekopie kon niet worden gemaakt. Probeer het opnieuw.');
+  }
+});
+document.getElementById('importBackup').addEventListener('click', () => {
+  document.getElementById('backupFileInput').click();
+});
+document.getElementById('backupFileInput').addEventListener('change', async event => {
+  const file = event.target.files?.[0];
+  try {
+    await restoreBackupFile(file);
+  } catch (error) {
+    console.warn('De reservekopie kon niet worden teruggezet.', error);
+    showToast(error.message || 'De reservekopie kon niet worden teruggezet.');
+  } finally {
+    event.target.value = '';
+  }
 });
 document.getElementById('resetData').addEventListener('click', () => {
   const confirmed = window.confirm('Wil je alle taken en instellingen wissen? Dit kan niet ongedaan worden gemaakt.');

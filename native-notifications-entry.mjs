@@ -1,5 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 const channelId = 'agenda-herinneringen';
 let channelReady = false;
@@ -51,5 +53,24 @@ window.StapNotifications = {
   async cancel(id) {
     if (!Capacitor.isNativePlatform()) return;
     await LocalNotifications.cancel({ notifications: [{ id }] });
+  }
+};
+
+
+window.StapBackup = {
+  isNative: Capacitor.isNativePlatform(),
+  async shareBackup(fileName, contents) {
+    const savedFile = await Filesystem.writeFile({
+      path: fileName,
+      data: contents,
+      directory: Directory.Cache,
+      encoding: 'utf8'
+    });
+    await Share.share({
+      title: 'Reservekopie van Stap voor Stap',
+      text: 'Bewaar dit bestand op een veilige plek. Je kunt het later terugzetten in Stap voor Stap.',
+      files: [savedFile.uri],
+      dialogTitle: 'Bewaar je reservekopie'
+    });
   }
 };

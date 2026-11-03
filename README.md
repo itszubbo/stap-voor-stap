@@ -161,3 +161,13 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - De afdruk is rustig opgemaakt op A4 en laat bewerkknoppen weg.
 - In het afdrukscherm van de browser kun je ook **Opslaan als PDF** kiezen.
 - De printfunctie is bedoeld voor de website in een browser. In de Android-app is afdrukken afhankelijk van de ondersteuning van het apparaat.
+
+
+### Reservekopie bewaren en terugzetten
+
+- Bij **Instellingen → Reservekopie** kun je een bestand maken met je taken, stappen, afspraken, vaste activiteiten, tijdblokken en instellingen.
+- Op de website wordt een JSON-bestand gedownload. In de Android-app opent het deelvenster van je telefoon zodat je het bestand kunt bewaren, bijvoorbeeld in Bestanden of Drive.
+- Met **Zet reservekopie terug** kun je zo'n bestand later kiezen. De huidige planning wordt dan vervangen.
+- Een reservekopie bevat persoonlijke planningsgegevens. Bewaar en deel het bestand zorgvuldig.
+- De reservekopie wordt niet naar de server van Stap voor Stap gestuurd.
+- Herinneringen op de telefoon worden na het terugzetten opnieuw klaargezet als meldingen zijn toegestaan.

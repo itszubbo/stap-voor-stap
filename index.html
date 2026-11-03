@@ -402,6 +402,18 @@
           <div class="setting-row"><div><h2>Grotere letters</h2><p>Maak de tekst groter of kleiner.</p></div><div class="font-controls"><button class="button button-secondary" id="fontDown" type="button" aria-label="Tekst kleiner maken">A−</button><button class="button button-secondary" id="fontUp" type="button" aria-label="Tekst groter maken">A+</button></div></div>
           <div class="setting-row"><div><h2>Rustige weergave</h2><p>Minder kleur en minder versiering.</p></div><button class="switch" id="settingsCalmToggle" type="button" role="switch" aria-checked="false"><span></span><span class="switch-label">Uit</span></button></div>
           <div class="setting-row"><div><h2>Voorlezen</h2><p>Met de knoppen ‘Lees voor’ kun je jouw dag, stappen en afspraken horen. De app gebruikt de stem die op je telefoon of computer beschikbaar is.</p></div></div>
+          <div class="setting-row backup-row">
+            <div>
+              <h2>Reservekopie</h2>
+              <p>Bewaar je taken en planning in een bestand. Je kunt dit bestand later terugzetten.</p>
+              <p class="small-note">Bewaar het bestand op een veilige plek. Het bevat jouw persoonlijke planning.</p>
+            </div>
+            <div class="backup-controls">
+              <button class="button button-secondary" id="exportBackup" type="button">⬇ Maak reservekopie</button>
+              <button class="button button-secondary" id="importBackup" type="button">↥ Zet reservekopie terug</button>
+              <input id="backupFileInput" type="file" accept=".json,application/json" hidden>
+            </div>
+          </div>
           <div class="setting-row"><div><h2>Mijn gegevens</h2><p>Je taken en keuzes staan op dit apparaat. Ze worden niet naar een server gestuurd.</p></div><button class="button button-danger-outline" id="resetData" type="button">Wis mijn gegevens</button></div>
         </section>
         <div class="privacy-note"><span aria-hidden="true">🔒</span><p><strong>Jouw privacy</strong><br>Deze eerste versie heeft geen account. De app bewaart gegevens in de browser op dit apparaat. Deel geen wachtwoorden of andere geheime informatie in een taak.</p></div>
