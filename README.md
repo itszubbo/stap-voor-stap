@@ -171,3 +171,11 @@ De GitHub Pages-workflow bouwt de webbestanden en meldingenmodule. De Android-wo
 - Een reservekopie bevat persoonlijke planningsgegevens. Bewaar en deel het bestand zorgvuldig.
 - De reservekopie wordt niet naar de server van Stap voor Stap gestuurd.
 - Herinneringen op de telefoon worden na het terugzetten opnieuw klaargezet als meldingen zijn toegestaan.
+
+
+### Extra informatie bij afspraken en tijdblokken
+
+- Bij een losse afspraak of een eigen tijdblok kun je korte extra informatie opschrijven, bijvoorbeeld wat je moet meenemen of waar je moet zijn.
+- De notitie staat bij de activiteit in de weekagenda, het dagrooster en de dagweergave.
+- De notitie kan ook worden voorgelezen met de voorleesknoppen.
+- Je kunt de notitie later aanpassen. De tekst blijft op dit apparaat opgeslagen en wordt meegenomen in een reservekopie.

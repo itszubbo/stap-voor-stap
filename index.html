@@ -161,6 +161,10 @@
                 <label for="dayBlockTitle">Wat ga je doen?</label>
                 <input id="dayBlockTitle" type="text" maxlength="70" placeholder="Bijvoorbeeld: ontbijten" required>
               </div>
+              <div class="agenda-field day-block-note">
+                <label for="dayBlockNote">Extra informatie (mag leeg blijven)</label>
+                <textarea id="dayBlockNote" rows="2" maxlength="180" placeholder="Bijvoorbeeld: neem je tas mee"></textarea>
+              </div>
               <p class="recurring-reminder-note">Een herinnering krijg je op Android. Kies een begintijd om deze in te stellen.</p>
               <div class="day-block-form-actions">
                 <button class="button button-primary day-block-submit" id="dayBlockSubmit" type="submit">Tijdblok toevoegen</button>
@@ -320,6 +324,10 @@
             <div class="agenda-field agenda-title-field">
               <label for="agendaTitleInput">Wat ga je doen?</label>
               <input id="agendaTitleInput" name="title" type="text" maxlength="70" placeholder="Bijvoorbeeld: naar de tandarts" required>
+            </div>
+            <div class="agenda-field agenda-note-field">
+              <label for="agendaNote">Extra informatie (mag leeg blijven)</label>
+              <textarea id="agendaNote" name="note" rows="2" maxlength="180" placeholder="Bijvoorbeeld: neem je pas mee"></textarea>
             </div>
             <div class="agenda-field">
               <label for="agendaType">Wat voor activiteit?</label>

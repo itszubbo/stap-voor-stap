@@ -436,3 +436,18 @@ body.calm-mode *, body.calm-mode *::before, body.calm-mode *::after { animation:
   .backup-controls { min-width: 0; width: 100%; }
   .backup-controls .button { width: 100%; }
 }
+
+
+/* Extra informatie bij afspraken en tijdblokken */
+.agenda-field textarea { width: 100%; min-width: 0; min-height: 72px; resize: vertical; border: 1px solid #d8e2de; border-radius: 11px; background: #fff; padding: 10px 12px; color: var(--ink); font: inherit; line-height: 1.45; }
+.agenda-note-field, .day-block-note { grid-column: 1 / -1; }
+.agenda-note, .day-plan-note, .today-agenda-note { display: block; color: #52645e; font-size: .82rem; line-height: 1.4; overflow-wrap: anywhere; }
+.agenda-note { padding-top: 2px; }
+.day-plan-note { padding-top: 3px; }
+.today-agenda-note { grid-column: 2 / -1; }
+@media (max-width: 650px) {
+  .agenda-note-field, .day-block-note { grid-column: auto; }
+}
+@media print {
+  body.print-week .agenda-note { color: #222 !important; font-size: 7.5pt !important; }
+}

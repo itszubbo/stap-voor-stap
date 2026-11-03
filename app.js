@@ -200,6 +200,7 @@ function renderTodayAgenda() {
       <span class="today-agenda-icon" aria-hidden="true">${info.icon}</span>
       <span class="today-agenda-time">${item.startTime ? escapeHtml(item.startTime) : 'Hele dag'}</span>
       <span class="today-agenda-title">${escapeHtml(item.title)}</span>
+      ${item.note ? `<span class="today-agenda-note">${escapeHtml(item.note)}</span>` : ''}
       ${item.source === 'recurring' ? '<span class="today-agenda-status">Vast</span>' : ''}
       ${item.done ? '<span class="today-agenda-status">Klaar</span>' : ''}
     </li>`;
@@ -468,6 +469,7 @@ function renderDayPlan() {
         <div class="day-plan-copy">
           <span class="day-plan-time">${timeLabel}</span>
           <strong>${escapeHtml(item.title)}</strong>
+          ${item.note ? `<span class="day-plan-note">${escapeHtml(item.note)}</span>` : ''}
           <span class="day-plan-kind">${info.label}${isBlock ? ' · Mijn tijdblok' : isRecurring ? ' · Herhaalt elke week' : ' · Agenda'}</span>
           ${item.reminderMinutes ? `<span class="reminder-tag">${isRecurring ? recurringReminderText(item) : reminderStatusText(item)}</span>` : ''}
         </div>
@@ -567,6 +569,7 @@ function renderAgenda() {
           <div class="agenda-item-copy">
             <span class="agenda-time">${item.startTime ? escapeHtml(item.startTime) : 'Hele dag'} · ${info.label}</span>
             <strong>${escapeHtml(item.title)}</strong>
+            ${item.note ? `<span class="agenda-note">${escapeHtml(item.note)}</span>` : ''}
             ${isRecurring ? '<span class="recurring-tag">↻ Herhaalt elke week</span>' : ''}
             ${item.reminderMinutes && !isRecurring ? `<span class="reminder-tag">${reminderStatusText(item)}</span>` : ''}
           </div>
@@ -821,6 +824,7 @@ function beginAgendaEdit(id) {
   document.getElementById('agendaDate').value = item.date;
   document.getElementById('agendaTime').value = item.time || '';
   document.getElementById('agendaTitleInput').value = item.title;
+  document.getElementById('agendaNote').value = item.note || '';
   document.getElementById('agendaType').value = item.type || 'appointment';
   document.getElementById('agendaReminder').value = String(item.reminderMinutes || 0);
   setAgendaFormMode(true);
@@ -837,6 +841,7 @@ document.getElementById('agendaForm').addEventListener('submit', async event => 
   const date = document.getElementById('agendaDate').value;
   const time = document.getElementById('agendaTime').value;
   const title = document.getElementById('agendaTitleInput').value.trim();
+  const note = document.getElementById('agendaNote').value.trim();
   const type = document.getElementById('agendaType').value;
   const reminderMinutes = Number(document.getElementById('agendaReminder').value || 0);
   if (!date || !title) {
@@ -865,6 +870,7 @@ document.getElementById('agendaForm').addEventListener('submit', async event => 
   item.date = date;
   item.time = time;
   item.title = title;
+  item.note = note;
   item.type = type;
   item.reminderMinutes = reminderMinutes;
   delete item.reminderStatus;
@@ -1152,6 +1158,7 @@ function beginDayBlockEdit(id) {
   document.getElementById('dayBlockStart').value = item.startTime || '';
   document.getElementById('dayBlockEnd').value = item.endTime || '';
   document.getElementById('dayBlockTitle').value = item.title || '';
+  document.getElementById('dayBlockNote').value = item.note || '';
   document.getElementById('dayBlockType').value = item.type || 'appointment';
   document.getElementById('dayBlockReminder').value = String(item.reminderMinutes || 0);
   setDayBlockFormMode(true);
@@ -1171,6 +1178,7 @@ document.getElementById('dayBlockForm').addEventListener('submit', async event =
   const startTime = document.getElementById('dayBlockStart').value;
   const endTime = document.getElementById('dayBlockEnd').value;
   const title = document.getElementById('dayBlockTitle').value.trim();
+  const note = document.getElementById('dayBlockNote').value.trim();
   const type = document.getElementById('dayBlockType').value;
   const reminderMinutes = Number(document.getElementById('dayBlockReminder').value || 0);
   if (!date || !startTime || !title) {
@@ -1202,6 +1210,7 @@ document.getElementById('dayBlockForm').addEventListener('submit', async event =
   item.startTime = startTime;
   item.endTime = endTime;
   item.title = title;
+  item.note = note;
   item.type = type;
   item.reminderMinutes = reminderMinutes;
   delete item.reminderStatus;
@@ -1381,13 +1390,13 @@ function makeSpeechText(section) {
     } else {
       lines.push('Je afspraken voor vandaag.');
       appointments.forEach(item => {
-        lines.push(`${item.startTime ? 'Om ' + item.startTime : 'De hele dag'}: ${item.title}. ${item.source === 'recurring' ? 'Dit is een vaste activiteit.' : ''} ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
+        lines.push(`${item.startTime ? 'Om ' + item.startTime : 'De hele dag'}: ${item.title}. ${item.note ? 'Extra informatie: ' + item.note + '.' : ''} ${item.source === 'recurring' ? 'Dit is een vaste activiteit.' : ''} ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
       });
     }
     const todayBlocks = state.dayBlocks.filter(item => item.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime));
     if (todayBlocks.length) {
       lines.push('Je eigen tijdblokken voor vandaag.');
-      todayBlocks.forEach(item => lines.push(`Om ${item.startTime}${item.endTime ? ' tot ' + item.endTime : ''}: ${item.title}. ${item.done ? 'Klaar.' : 'Nog te doen.'}`));
+      todayBlocks.forEach(item => lines.push(`Om ${item.startTime}${item.endTime ? ' tot ' + item.endTime : ''}: ${item.title}. ${item.note ? 'Extra informatie: ' + item.note + '.' : ''} ${item.done ? 'Klaar.' : 'Nog te doen.'}`));
     }
     return lines.join(' ');
   }
@@ -1402,7 +1411,7 @@ function makeSpeechText(section) {
       const time = item.startTime
         ? `Om ${item.startTime}${item.endTime ? ' tot ' + item.endTime : ''}`
         : 'De hele dag';
-      lines.push(`${time}: ${item.title}. ${info.label}. ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
+      lines.push(`${time}: ${item.title}. ${info.label}. ${item.note ? 'Extra informatie: ' + item.note + '.' : ''} ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
     });
     return lines.join(' ');
   }
@@ -1431,7 +1440,7 @@ function makeSpeechText(section) {
       } else {
         items.forEach(item => {
           const info = agendaTypeInfo(item.type);
-          lines.push(`${item.startTime ? 'Om ' + item.startTime : 'De hele dag'}: ${item.title}. ${info.label}. ${item.source === 'recurring' ? 'Deze activiteit herhaalt elke week.' : ''} ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
+          lines.push(`${item.startTime ? 'Om ' + item.startTime : 'De hele dag'}: ${item.title}. ${info.label}. ${item.note ? 'Extra informatie: ' + item.note + '.' : ''} ${item.source === 'recurring' ? 'Deze activiteit herhaalt elke week.' : ''} ${item.done ? 'Klaar.' : 'Nog te doen.'}`);
         });
       }
     }
