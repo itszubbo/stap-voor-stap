@@ -82,9 +82,68 @@ function loadState() {
   }
 }
 function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); window.ClientSuite?.savePlannerSnapshot?.(); }
   catch (error) { showToast('Opslaan lukt niet. Controleer de instellingen van je browser.'); }
 }
+
+function timeToMinutes(value) {
+  if (!value || !/^\\d{2}:\\d{2}$/.test(value)) return null;
+  const [hours, minutes] = value.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+function scheduleTimesOverlap(startA, endA, startB, endB) {
+  const a = timeToMinutes(startA), b = timeToMinutes(startB);
+  if (a === null || b === null) return false;
+  if (a === b) return true;
+  const aEnd = timeToMinutes(endA), bEnd = timeToMinutes(endB);
+  if (aEnd !== null && b < aEnd && b >= a) return true;
+  if (bEnd !== null && a < bEnd && a >= b) return true;
+  if (aEnd !== null && bEnd !== null && a < bEnd && b < aEnd) return true;
+  return false;
+}
+function weekdayNumber(dateISO) {
+  const date = new Date(dateISO + 'T12:00:00');
+  return ((date.getDay() + 6) % 7) + 1;
+}
+function findScheduleConflict(date, startTime, endTime = '', excludeId = '', excludeRecurringId = '') {
+  if (!date || !startTime) return '';
+  const planned = [
+    ...state.agenda.filter(item => item.id !== excludeId && item.date === date).map(item => ({ id: item.id, start: item.time, end: item.endTime || '' , title: item.title })),
+    ...state.dayBlocks.filter(item => item.id !== excludeId && item.date === date).map(item => ({ id: item.id, start: item.startTime, end: item.endTime || '', title: item.title }))
+  ];
+  for (const item of planned) {
+    if (scheduleTimesOverlap(startTime, endTime, item.start, item.end)) {
+      return 'Er staat op ' + date + ' om ' + item.start + ' al iets gepland: ' + item.title + '. Kies een andere tijd.';
+    }
+  }
+  const weekday = weekdayNumber(date);
+  for (const activity of state.recurringActivities) {
+    if (activity.id === excludeRecurringId || activity.active === false || !(activity.weekdays || []).includes(weekday) || !activity.time) continue;
+    if (scheduleTimesOverlap(startTime, endTime, activity.time, activity.endTime || '')) {
+      return 'Er staat op deze dag al een vaste activiteit om ' + activity.time + ': ' + activity.title + '. Kies een andere tijd.';
+    }
+  }
+  return '';
+}
+function findRecurringConflict(weekdays, time, excludeId = '') {
+  if (!time) return '';
+  for (const activity of state.recurringActivities) {
+    if (activity.id === excludeId || activity.active === false || !activity.time) continue;
+    if ((activity.weekdays || []).some(day => weekdays.includes(day)) && scheduleTimesOverlap(time, '', activity.time, activity.endTime || '')) {
+      return 'Er is al een vaste activiteit op een van deze dagen om ' + activity.time + ': ' + activity.title + '.';
+    }
+  }
+  const today = new Date();
+  for (let offset = 0; offset < 56; offset++) {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+    const dateISO = toLocalISO(date);
+    if (!weekdays.includes(weekdayNumber(dateISO))) continue;
+    const existing = findScheduleConflict(dateISO, time, '', '', excludeId);
+    if (existing) return existing;
+  }
+  return '';
+}
+
 function makeId(prefix = 'item') {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
@@ -873,6 +932,8 @@ document.getElementById('agendaForm').addEventListener('submit', async event => 
     return;
   }
 
+  const conflict = findScheduleConflict(date, time, '', editingAgendaId || '');
+  if (conflict) { showToast(conflict); document.getElementById('agendaTime').focus(); return; }
   const isEditing = Boolean(editingAgendaId);
   let item = isEditing ? state.agenda.find(entry => entry.id === editingAgendaId) : null;
   if (isEditing && !item) {
@@ -1033,6 +1094,8 @@ document.getElementById('recurringForm').addEventListener('submit', async event 
     showToast('Kies minstens één dag.');
     return;
   }
+  const recurringConflict = findRecurringConflict(weekdays, time, editingRecurringId || '');
+  if (recurringConflict) { showToast(recurringConflict); document.getElementById('recurringTime').focus(); return; }
   if (endTime && (!time || endTime <= time)) {
     showToast('De eindtijd moet na de begintijd zijn.');
     document.getElementById('recurringEndTime').focus();
@@ -1311,6 +1374,8 @@ document.getElementById('dayBlockForm').addEventListener('submit', async event =
     return;
   }
 
+  const conflict = findScheduleConflict(date, startTime, endTime, editingDayBlockId || '');
+  if (conflict) { showToast(conflict); document.getElementById('dayBlockStart').focus(); return; }
   const isEditing = Boolean(editingDayBlockId);
   if (isEditing) {
     const existing = state.dayBlocks.find(entry => entry.id === editingDayBlockId);
