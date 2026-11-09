@@ -7,6 +7,9 @@ const webFiles = [
   'index.html',
   'styles.css',
   'app.js',
+  'client-suite.js',
+  'client-suite.css',
+  'firebase-config.js',
   'service-worker.js',
   'manifest.webmanifest',
   'icon.svg'
