@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+    function isMember(groupId) {
+      return signedIn() && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+
+    match /usernames/{username} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.usernameLower == username
+        && username.matches('^[a-z0-9_]{3,20}$')
+        && !exists(/databases/$(database)/documents/usernames/$(username));
+      allow update: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.usernameLower == username;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /users/{uid}/private/{docId} {
+      allow read, create, update, delete: if isSelf(uid);
+    }
+    match /users/{uid}/data/{docId} {
+      allow read, create, update, delete: if isSelf(uid);
+    }
+
+    match /groupInvites/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.groupId is string;
+      allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /groups/{groupId} {
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.groupCode is string
+        && request.resource.data.name is string;
+      allow read: if isMember(groupId);
+      allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+
+      match /members/{uid} {
+        allow get, list: if isMember(groupId);
+        allow create: if isSelf(uid)
+          && request.resource.data.uid == request.auth.uid
+          && exists(/databases/$(database)/documents/groupInvites/$(request.resource.data.inviteCode))
+          && get(/databases/$(database)/documents/groupInvites/$(request.resource.data.inviteCode)).data.groupId == groupId;
+        allow update: if isSelf(uid) && resource.data.uid == request.auth.uid;
+        allow delete: if isSelf(uid) || (signedIn() && get(/databases/$(database)/documents/groups/$(groupId)).data.ownerUid == request.auth.uid);
+      }
+
+      match /polls/{pollId} {
+        allow read: if isMember(groupId);
+        allow create: if isMember(groupId) && request.resource.data.createdBy == request.auth.uid;
+        allow update: if isMember(groupId) && resource.data.createdBy == request.auth.uid;
+        allow delete: if isMember(groupId) && resource.data.createdBy == request.auth.uid;
+        match /votes/{uid} {
+          allow read: if isMember(groupId);
+          allow create, update: if isSelf(uid)
+            && isMember(groupId)
+            && request.resource.data.uid == request.auth.uid;
+          allow delete: if isSelf(uid);
+        }
+      }
+
+      match /chores/{choreId} {
+        allow read: if isMember(groupId);
+        allow create: if isMember(groupId) && request.resource.data.createdBy == request.auth.uid;
+        allow update: if isMember(groupId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done','doneBy','doneAt','updatedAt','title','points','assignedTo']);
+        allow delete: if isMember(groupId) && resource.data.createdBy == request.auth.uid;
+      }
+
+      match /shifts/{shiftId} {
+        allow read: if isMember(groupId);
+        allow create: if isMember(groupId) && request.resource.data.createdBy == request.auth.uid;
+        allow update, delete: if isMember(groupId) && resource.data.createdBy == request.auth.uid;
+      }
+    }
+  }
+}
