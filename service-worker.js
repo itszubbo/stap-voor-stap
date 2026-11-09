@@ -1,5 +1,5 @@
-const CACHE_NAME = 'stap-voor-stap-v21'
-const FILES = ['./', './index.html', './styles.css', './app.js', './native-notifications.js', './manifest.webmanifest', './icon.svg'];
+const CACHE_NAME = 'stap-voor-stap-v22'
+const FILES = ['./', './index.html', './styles.css', './app.js', './client-suite.js', './client-suite.css', './firebase-config.js', './native-notifications.js', './manifest.webmanifest', './icon.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(FILES)));
   self.skipWaiting();
