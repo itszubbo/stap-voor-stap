@@ -416,7 +416,45 @@
         </section>
       </section>
 
-      <section class="view" id="view-rust" aria-labelledby="calmTitle" hidden>
+      <section class="view client-extra-view" id="view-herinneringen" aria-labelledby="remindersTitle" hidden>
+  <div class="page-heading"><p class="eyebrow">VASTE MOMENTEN</p><h1 id="remindersTitle">Mijn herinneringen</h1><p class="intro">Kies wat je wilt onthouden. Je telefoon kan je op het juiste moment een melding geven.</p></div>
+  <section class="client-panel"><h2>Een herinnering toevoegen</h2><p class="client-muted">Bijvoorbeeld tanden poetsen, medicatie, naar bed gaan of opstaan.</p>
+    <form id="clientReminderForm" class="client-form"><label>Wat wil je onthouden?<input id="clientReminderTitle" maxlength="70" required placeholder="Bijvoorbeeld: tanden poetsen"></label>
+      <div class="form-row"><label>Hoe laat?<input id="clientReminderTime" type="time" required></label><label>Wanneer?<select id="clientReminderType"><option value="daily">Elke dag</option><option value="weekdays">Maandag tot en met vrijdag</option><option value="weekend">Weekend</option></select></label></div>
+      <div class="client-buttons"><button class="client-button primary" type="submit">Herinnering bewaren</button></div></form></section>
+  <section class="client-panel"><h2>Mijn vaste herinneringen</h2><div id="clientReminderList" aria-live="polite"></div></section>
+  <section class="client-panel"><h2>Goed om te weten</h2><p class="client-muted">Een melding kan helpen om iets niet te vergeten. Gebruik de app niet als enige controle voor medicatie. Spreek met je apotheek of zorgverlener af hoe medicatie veilig wordt beheerd. Meldingen kunnen uitstaan of door Android worden vertraagd.</p><p id="notificationPermissionStatus" class="sync-status">Meldingen: nog niet gecontroleerd.</p><button class="client-button" id="requestNotifications" type="button">Meldingen aanzetten</button></section>
+</section>
+<section class="view client-extra-view" id="view-prikkels" aria-labelledby="sensoryTitle" hidden>
+  <div class="page-heading"><p class="eyebrow">HOE VOELT HET NU?</p><h1 id="sensoryTitle">Mijn prikkelmeter</h1><p class="intro">Kies wat bij jou past. Er is geen goed of fout antwoord.</p></div>
+  <section class="client-panel"><h2>Hoe vol is je hoofd?</h2><p class="client-muted">Je kunt dit op ieder moment veranderen.</p>
+    <div class="sensory-grid" role="group" aria-label="Kies je prikkelniveau">
+      <button class="sensory-button sensory-green" type="button" data-sensory="green" aria-pressed="false"><span class="sensory-symbol">🟢</span><strong>Groen</strong><small>Ik voel me rustig</small></button>
+      <button class="sensory-button sensory-orange" type="button" data-sensory="orange" aria-pressed="false"><span class="sensory-symbol">🟠</span><strong>Oranje</strong><small>Het wordt wat druk</small></button>
+      <button class="sensory-button sensory-red" type="button" data-sensory="red" aria-pressed="false"><span class="sensory-symbol">🔴</span><strong>Rood</strong><small>Het is te veel</small></button></div>
+    <div id="sensoryAdvice" class="sensory-advice" aria-live="polite">Je hebt nog niets gekozen. Neem rustig de tijd.</div></section>
+  <section class="client-panel"><h2>Wat kan mij helpen?</h2><div class="client-buttons"><button class="client-button" type="button" data-sensory-help="rust">Even naar een rustige plek</button><button class="client-button" type="button" data-sensory-help="koptelefoon">Mijn koptelefoon op</button><button class="client-button" type="button" data-sensory-help="hulp">Iemand om hulp vragen</button><button class="client-button" type="button" data-sensory-help="pauze">Even pauze nemen</button></div><p class="client-muted" id="sensoryHelpStatus" aria-live="polite"></p></section>
+  <section class="client-panel"><h2>Mijn laatste keuzes</h2><div id="sensoryHistory" class="client-muted">Je hebt nog geen keuzes opgeslagen.</div><p class="auth-help">Deze metingen zijn privé. Je kunt zelf kiezen of je iets met iemand wilt delen.</p></section>
+</section>
+<section class="view client-extra-view" id="view-mindfulness" aria-labelledby="mindfulnessTitle" hidden>
+  <div class="page-heading"><p class="eyebrow">EVEN RUST</p><h1 id="mindfulnessTitle">Mindfulness</h1><p class="intro">Een rustig moment voor jezelf. Je hoeft niets goed te doen.</p></div>
+  <section class="client-panel"><div class="mindful-stage"><h2 id="mindfulPrompt">We gaan rustig ademhalen</h2><p id="mindfulDescription" class="client-muted">Adem rustig in als de cirkel groter wordt. Adem uit als de cirkel kleiner wordt.</p>
+    <div id="breathCircle" class="breath-circle" aria-live="polite">Adem rustig</div><div id="mindfulClock" class="mindful-clock">02:00</div><div class="mindful-progress"><span id="mindfulProgress"></span></div>
+    <div class="client-buttons"><button class="client-button primary" id="mindfulStart" type="button">Start 2 minuten</button><button class="client-button" id="mindfulStop" type="button">Stop</button><button class="client-button" id="mindfulVoice" type="button">🔊 Lees rustig voor</button></div><p id="mindfulStatus" class="client-muted" aria-live="polite">Je kunt op ieder moment stoppen.</p></div></section>
+  <section class="client-panel"><h2>Kies een rustmoment</h2><div class="reminder-shortcuts"><button class="reminder-shortcut" data-mindful="breathing" type="button"><span>🌬️</span><strong>Rustig ademhalen</strong><small>Twee minuten</small></button><button class="reminder-shortcut" data-mindful="body" type="button"><span>🌱</span><strong>Voel je voeten</strong><small>Even landen in het hier en nu</small></button><button class="reminder-shortcut" data-mindful="thoughts" type="button"><span>☁️</span><strong>Gedachten laten gaan</strong><small>Je hoeft niet alles op te lossen</small></button></div></section>
+</section>
+<section class="view client-extra-view" id="view-groep" aria-labelledby="groupTitle" hidden>
+  <div class="page-heading"><p class="eyebrow">SAMEN OVERZICHT</p><h1 id="groupTitle">Mijn groep</h1><p class="intro">Een plek voor afspraken, stemmen en klusjes met de mensen die bij jouw groep horen.</p></div>
+  <section class="client-panel" id="groupAccessPanel"><h2>Een groep maken of meedoen</h2><p class="client-muted">Een groep kan bijvoorbeeld jouw woning of dagbesteding zijn. Deel de code alleen met de mensen die erbij horen.</p>
+    <form id="createGroupForm" class="client-form"><label>Naam van de groep<input id="createGroupName" maxlength="50" placeholder="Bijvoorbeeld: Woning De Linde" required></label><button class="client-button primary" type="submit">Maak een groep</button></form>
+    <form id="joinGroupForm" class="client-form" style="margin-top:18px"><label>Groepscode<input id="joinGroupCode" maxlength="8" placeholder="Bijvoorbeeld: A7K3M9" required></label><button class="client-button" type="submit">Meedoen met een groep</button></form></section>
+  <section class="client-panel" id="groupDashboard" hidden><h2 id="groupNameHeading">Mijn groep</h2><p>Uitnodigingscode: <span id="groupCodeDisplay" class="group-code"></span> <button id="copyGroupCode" class="auth-link" type="button">Kopieer</button></p><p class="client-muted">Iedereen in de groep gebruikt een eigen account. Er is geen begeleidersaccount of apart begeleidersportaal.</p>
+    <div class="community-layout"><section><h3>Stemmen</h3><form id="createPollForm" class="client-form"><label>Waar stemmen we over?<input id="pollQuestion" maxlength="110" required placeholder="Bijvoorbeeld: wat doen we zaterdag?"></label><label>Keuzes (één per regel)<textarea id="pollOptions" rows="3" maxlength="400" required placeholder="Bowlen&#10;Wandelen&#10;Film kijken"></textarea></label><button class="client-button primary" type="submit">Maak stemming</button></form><div id="pollList"></div></section>
+    <section><h3>Goed poetsen en klusjes</h3><p class="client-muted">Houd kleine klusjes bij en spreek samen af hoeveel punten iets waard is.</p><form id="createChoreForm" class="client-form"><label>Welk klusje?<input id="choreTitle" maxlength="80" required placeholder="Bijvoorbeeld: keuken schoonmaken"></label><label>Punten<select id="chorePoints"><option value="1">1 punt</option><option value="2">2 punten</option><option value="5">5 punten</option><option value="10">10 punten</option></select></label><button class="client-button primary" type="submit">Voeg klusje toe</button></form><div id="choreList"></div></section></div>
+    <section style="margin-top:22px"><h3>Wie werkt er?</h3><p class="client-muted">Zet hier de diensten of werktijden neer die voor de groep van belang zijn.</p><form id="createShiftForm" class="client-form"><div class="form-row"><label>Naam of team<input id="shiftName" maxlength="60" required placeholder="Bijvoorbeeld: Team ochtend"></label><label>Datum<input id="shiftDate" type="date" required></label></div><div class="form-row"><label>Begintijd<input id="shiftStart" type="time" required></label><label>Eindtijd<input id="shiftEnd" type="time" required></label></div><button class="client-button primary" type="submit">Voeg werktijd toe</button></form><div id="shiftList"></div></section>
+  </section>
+</section>
+<section class="view" id="view-rust" aria-labelledby="calmTitle" hidden>
         <div class="page-heading">
           <p class="eyebrow">NEEM JE TIJD</p>
           <h1 id="calmTitle">Rust & hulp</h1>
@@ -464,6 +502,8 @@
           <p class="intro">Pas de app aan op een manier die prettig voelt.</p>
         </div>
         <section class="panel settings-panel">
+          <div class="setting-row" id="accountSettings"><div><h2>Mijn account</h2><p>Je bent ingelogd als <strong id="settingsAccountName">-</strong>. Je account is beschermd met e-mail en Google Authenticator.</p><p class="sync-status" id="cloudSyncStatus">Synchronisatie nog niet gecontroleerd.</p></div><button class="button button-secondary" id="settingsLogout" type="button">Uitloggen</button></div>
+          
           <div class="setting-row"><div><h2>Grotere letters</h2><p>Maak de tekst groter of kleiner.</p></div><div class="font-controls"><button class="button button-secondary" id="fontDown" type="button" aria-label="Tekst kleiner maken">A−</button><button class="button button-secondary" id="fontUp" type="button" aria-label="Tekst groter maken">A+</button></div></div>
           <div class="setting-row"><div><h2>Rustige weergave</h2><p>Minder kleur en minder versiering.</p></div><button class="switch" id="settingsCalmToggle" type="button" role="switch" aria-checked="false"><span></span><span class="switch-label">Uit</span></button></div>
           <div class="setting-row"><div><h2>Voorlezen</h2><p>Met de knoppen ‘Lees voor’ kun je jouw dag, stappen en afspraken horen. De app gebruikt de stem die op je telefoon of computer beschikbaar is.</p></div></div>
@@ -481,7 +521,7 @@
           </div>
           <div class="setting-row"><div><h2>Mijn gegevens</h2><p>Je taken en keuzes staan op dit apparaat. Ze worden niet naar een server gestuurd.</p></div><button class="button button-danger-outline" id="resetData" type="button">Wis mijn gegevens</button></div>
         </section>
-        <div class="privacy-note"><span aria-hidden="true">🔒</span><p><strong>Jouw privacy</strong><br>Deze eerste versie heeft geen account. De app bewaart gegevens in de browser op dit apparaat. Deel geen wachtwoorden of andere geheime informatie in een taak.</p></div>
+        <div class="privacy-note"><span aria-hidden="true">🔒</span><p><strong>Jouw privacy</strong><br>Je gegevens horen bij jouw eigen account. Groepsinformatie is alleen zichtbaar voor leden van jouw groep. Je prikkelmeter is privé tenzij je iets zelf deelt.</p></div>
       </section>
 
       <footer class="footer"><span>Stap voor Stap</span><span>Jouw tempo is goed.</span></footer>
