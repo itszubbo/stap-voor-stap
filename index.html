@@ -8,27 +8,53 @@
   <title>Stap voor Stap</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="client-suite.css">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
 </head>
 <body>
+  <section id="authGate" aria-labelledby="authTitle">
+    <div class="auth-card">
+      <div class="auth-brand"><span class="auth-mark">S</span><span>Stap voor Stap</span></div>
+      <p class="eyebrow">JOUW EIGEN PLEK</p>
+      <h1 id="authTitle">Welkom</h1>
+      <p id="authIntro">Log in met je e-mailadres en wachtwoord. Je gegevens zijn alleen voor jouw account.</p>
+      <div id="authConfigWarning" class="auth-config" hidden>De app moet eerst worden gekoppeld aan Firebase. Volg FIREBASE-INSTELLEN.md. Daarna werken accounts, e-mailbevestiging en Google Authenticator.</div>
+      <form id="clientAuthForm" class="auth-form">
+        <label id="authUsernameWrap" hidden>Gebruikersnaam<input id="authUsername" name="username" minlength="3" maxlength="20" autocomplete="username" placeholder="Kies een gebruikersnaam"></label>
+        <label>E-mailadres<input id="authEmail" name="email" type="email" autocomplete="email" required placeholder="jij@voorbeeld.nl"></label>
+        <label>Wachtwoord<input id="authPassword" name="password" type="password" autocomplete="current-password" minlength="10" required placeholder="Minimaal 10 tekens"></label>
+        <label id="authConfirmWrap" hidden>Herhaal je wachtwoord<input id="authConfirm" name="confirm" type="password" autocomplete="new-password" minlength="10" placeholder="Typ hetzelfde wachtwoord nog een keer"></label>
+        <button class="button button-primary" id="authSubmit" type="submit">Inloggen</button>
+      </form>
+      <div class="auth-actions"><button class="auth-link" id="authModeSwitch" type="button">Ik wil een account maken</button><button class="auth-link" id="authForgotPassword" type="button">Wachtwoord vergeten</button></div>
+      <div id="authExtra" hidden></div>
+      <p id="authMessage" class="auth-message" role="status" aria-live="polite" hidden></p>
+      <p class="auth-help">Je account is persoonlijk. Deel je wachtwoord of Authenticator-code nooit met iemand.</p>
+    </div>
+  </section>
   <a class="skip-link" href="#main">Ga naar de inhoud</a>
   <header class="topbar">
     <a class="brand" href="#vandaag" aria-label="Stap voor Stap, naar vandaag">
       <span class="brand-mark" aria-hidden="true">S</span>
       <span>Stap voor Stap</span>
     </a>
+    <div class="account-chip"><span id="accountName">Mijn account</span><button id="accountLogout" type="button">Uitloggen</button></div>
     <button class="quiet-toggle" id="calmToggle" type="button" aria-pressed="false">
       <span aria-hidden="true">◐</span> Rustige weergave
     </button>
   </header>
 
-  <div class="app-shell">
+  <div class="app-shell" id="appContent" hidden>
     <aside class="sidebar" aria-label="Hoofdnavigatie">
       <p class="nav-label">MENU</p>
       <nav class="main-nav">
         <button class="nav-button active" data-view="vandaag" type="button"><span aria-hidden="true">☀</span> Vandaag</button>
         <button class="nav-button" data-view="stappen" type="button"><span aria-hidden="true">✓</span> Mijn stappen</button>
         <button class="nav-button" data-view="agenda" type="button"><span aria-hidden="true">📅</span> Week & agenda</button>
+        <button class="nav-button" data-view="herinneringen" type="button"><span aria-hidden="true">🔔</span> Herinneringen</button>
+        <button class="nav-button" data-view="prikkels" type="button"><span aria-hidden="true">🟢</span> Prikkelmeter</button>
+        <button class="nav-button" data-view="mindfulness" type="button"><span aria-hidden="true">🌿</span> Mindfulness</button>
+        <button class="nav-button" data-view="groep" type="button"><span aria-hidden="true">🤝</span> Mijn groep</button>
         <button class="nav-button" data-view="rust" type="button"><span aria-hidden="true">♡</span> Rust & hulp</button>
         <button class="nav-button" data-view="instellingen" type="button"><span aria-hidden="true">⚙</span> Instellingen</button>
       </nav>
@@ -463,6 +489,7 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="native-notifications.js" defer></script>
+  <script type="module" src="client-suite.js"></script>
   <script src="app.js" defer></script>
 </body>
 </html>
