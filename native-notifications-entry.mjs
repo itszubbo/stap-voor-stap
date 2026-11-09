@@ -29,6 +29,10 @@ async function ensurePermission() {
 
 window.StapNotifications = {
   isNative: Capacitor.isNativePlatform(),
+  async requestPermission() {
+    if (!Capacitor.isNativePlatform()) return false;
+    return ensurePermission();
+  },
   async hasPermission() {
     if (!Capacitor.isNativePlatform()) return false;
     const permission = await LocalNotifications.checkPermissions();
